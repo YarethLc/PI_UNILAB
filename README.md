@@ -7,6 +7,8 @@ Proyecto integrador desarrollado con metodología ágil **SCRUM**.
 
 ## 📋 Descripción del proyecto
 
+El presente proyecto integrador tiene como propósito el diseño, desarrollo e implementación de un Producto Mínimo Viable (MVP) que consiste en una aplicación móvil multiplataforma, dirigida a la comunidad de egresados del Programa de Ingeniería de Sistemas de la Unidad Central del Valle del Cauca (UCEVA). Dicha herramienta tecnológica que tiene como finalidad principal la automatización y gestión eficiente del proceso de reserva de espacios físicos institucionales, particularmente los laboratorios, las áreas destinadas al servicio de biblioteca,  optimizar la administración y el aprovechamiento de los recursos disponibles por parte de la institución.
+
 La solución busca:
 
 - Facilitar la autenticación de egresados.
