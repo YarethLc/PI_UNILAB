@@ -46,7 +46,6 @@ feature/hu02-auth-login-registro       → autenticación backend
 feature/hu02-ui-login-registro         → pantallas login/registro
 feature/hu03-perfil-usuario            → perfil del egresado
 feature/hu04-modelado-espacios         → modelado de espacios en BD
-release/sprint-1                       → (opcional) congelamiento antes de review
 hotfix/*                               → correcciones urgentes sobre main
 ```
 
@@ -75,8 +74,8 @@ Desplegar una aplicación móvil funcional con autenticación segura de egresado
 ### Clonar el repositorio
 
 ```bash
-git clone https://github.com/<usuario-o-organizacion>/<nombre-repo>.git
-cd <nombre-repo>
+git clone https://github.com/robinsonperez02/PI_UNILAB.git
+cd PI_UNILAB
 git checkout develop
 ```
 
