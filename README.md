@@ -219,7 +219,15 @@ Las pruebas de autenticación y endpoints se documentan en la colección de Post
 
 ## 👥 Equipo
 
-_Agregar aquí los nombres e integrantes del equipo por Sprint._
+-Product Owner:
+-Scrum Master:
+Development Team: 
+-UI/UX Designer: 
+-Frontend Developer:
+-Backend Developer:
+-QA & Test Engineer:
+-Documentation & DevOps Engineer: Marko Arcila, Maria Izquierdo, Nykolle Londoño, Robinson Perez, Andrey Tabares, Esteban Triviño, Valentina Varón.
+
 
 ## 📝 Licencia
 
