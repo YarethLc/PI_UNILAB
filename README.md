@@ -76,7 +76,7 @@ Desplegar una aplicación móvil funcional con autenticación segura de egresado
 ### Clonar el repositorio
 
 ```bash
-git clone https://github.com/robinsonperez02/PI_UNILAB.git
+git clone https://github.com/YarethLc/PI_UNILAB.git
 cd PI_UNILAB
 git checkout develop
 ```
