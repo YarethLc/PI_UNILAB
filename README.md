@@ -40,18 +40,126 @@ La solución busca:
 
 ## 🌱 Estrategia de ramas (GitFlow)
 
-```
-main                                   → código estable / producción
-develop                                → integración de features
-feature/hu01-setup-arquitectura        → configuración inicial
-feature/hu02-auth-login-registro       → autenticación backend
-feature/hu02-ui-login-registro         → pantallas login/registro
-feature/hu03-perfil-usuario            → perfil del egresado
-feature/hu04-modelado-espacios         → modelado de espacios en BD
-hotfix/*                               → correcciones urgentes sobre main
+El proyecto utiliza una estrategia de ramas basada en **GitFlow**, con el objetivo de mantener organizado el desarrollo y evitar cambios directos sobre las ramas principales.
+
+```text
+main
+  │
+  │  Código estable / producción
+  │
+  └── develop
+       │
+       │  Integración de funcionalidades
+       │
+       ├── backend
+       │    │
+       │    ├── feature/login-registro
+       │    ├── feature/reservas
+       │    └── feature/...
+       │
+       └── frontend
+            │
+            ├── feature/login-registro
+            ├── feature/reservas
+            └── feature/...
 ```
 
-Todo cambio se integra a `develop` mediante **Pull Request** con al menos una aprobación antes del merge. `main` solo recibe código estable ya validado.
+### 📌 Ramas principales
+
+| Rama       | Propósito                                                                   |
+| ---------- | ----------------------------------------------------------------------------|
+| `main`     | Contiene únicamente código estable y listo para producción.                               |
+| `develop`  | Rama principal de integración donde se incorporan los desarrollos terminados y revisados. |
+| `backend`  | Rama destinada a integrar el desarrollo correspondiente al backend.                       |
+| `frontend` | Rama destinada a integrar el desarrollo correspondiente al frontend móvil.  |
+
+### 🔧 Ramas de funcionalidades
+
+Cada integrante debe crear una rama `feature` a partir de la rama correspondiente a su área.
+
+**Backend:**
+
+```bash
+git checkout backend
+git pull origin backend
+git checkout -b feature/nombre-funcionalidad
+```
+
+Ejemplo:
+
+```bash
+git checkout -b feature/login-registro
+```
+
+**Frontend:**
+
+```bash
+git checkout frontend
+git pull origin frontend
+git checkout -b feature/nombre-funcionalidad
+```
+
+Ejemplo:
+
+```bash
+git checkout -b feature/login-registro
+```
+
+### 🔄 Flujo de trabajo
+
+El flujo general será:
+
+```text
+feature/*
+    ↓
+backend / frontend
+    ↓
+develop
+    ↓
+main
+```
+
+1. Crear una rama `feature` desde `backend` o `frontend`.
+2. Desarrollar la funcionalidad correspondiente.
+3. Realizar commits descriptivos.
+4. Subir la rama al repositorio remoto.
+5. Crear un **Pull Request (PR)** hacia `backend` o `frontend`.
+6. Revisar y aprobar el Pull Request.
+7. Una vez integradas las funcionalidades, realizar el Pull Request correspondiente hacia `develop`.
+8. Después de las pruebas y validaciones finales, `develop` podrá integrarse en `main`.
+
+### ⚠️ Reglas importantes
+
+* No realizar `push` directamente sobre `main`.
+* No realizar `push` directamente sobre `develop`.
+* No trabajar directamente sobre `backend` o `frontend`.
+* Cada funcionalidad debe desarrollarse en una rama `feature/*`.
+* Los cambios deben ingresar mediante **Pull Requests**.
+* Los Pull Requests deben ser revisados antes de realizar el merge.
+* Los mensajes de commit deben describir claramente el cambio realizado.
+
+### 📝 Convención para nombres de ramas
+
+Se recomienda utilizar:
+
+```text
+feature/nombre-funcionalidad
+fix/nombre-del-error
+refactor/nombre-del-cambio
+docs/nombre-documentacion
+```
+
+Ejemplos:
+
+```text
+feature/login-registro
+feature/reservas
+feature/perfil-usuario
+fix/error-autenticacion
+refactor/estructura-backend
+docs/actualizar-readme
+```
+
 
 ## 🚀 Sprint 1 — Objetivo
 
@@ -79,6 +187,7 @@ Desplegar una aplicación móvil funcional con autenticación segura de egresado
 git clone https://github.com/YarethLc/PI_UNILAB.git
 cd PI_UNILAB
 git checkout develop
+git pull origin develop
 ```
 
 ### Backend
