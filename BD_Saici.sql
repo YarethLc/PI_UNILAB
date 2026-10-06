@@ -6,10 +6,19 @@ CREATE TABLE usuario (
 	email varchar (100) unique not null,
 	telefono varchar (20) unique not null,
 	contrasena varchar (255) not null,
-	rol varchar (30) not null,
+	rol varchar (30) not null default 'USUARIO',
+    tipo_usuario varchar(30),
 
 	CONSTRAINT chk_rol_usuario
-		CHECK (rol IN ('ADMINISTRADOR', 'EGRESADO'))
+		CHECK (rol IN ('ADMINISTRADOR', 'USUARIO')),
+
+    CONSTRAINT chk_tipo_usuario
+		CHECK (
+            (rol = 'ADMINISTRADOR' AND tipo_usuario IS NULL)
+            OR
+            (rol = 'USUARIO'
+            AND tipo_usuario IN ('EGRESADO', 'ESTUDIANTE'))
+            )
 );
 
 -- Tabla de laboratorio

@@ -15,7 +15,7 @@ const registrarUsuario = async (req, res) => {
 
     try {
 
-        const { nombres, apellidos, email, telefono, contrasena, confirmarContrasena } = req.body;
+        const { nombres, apellidos, email, telefono, contrasena, confirmarContrasena, tipo_usuario } = req.body;
 
         if (
             !nombres ||
@@ -23,7 +23,8 @@ const registrarUsuario = async (req, res) => {
             !email ||
             !telefono ||
             !contrasena ||
-            !confirmarContrasena
+            !confirmarContrasena ||
+            !tipo_usuario
         ) {
             return res.status(400).json({
                 mensaje: "Todos los campos son obligatorios"
@@ -45,6 +46,12 @@ const registrarUsuario = async (req, res) => {
         if (contrasena.length < 8) {
             return res.status(400).json({
                 mensaje: "La contraseña debe tener al menos 8 caracteres"
+            });
+        }
+
+        if (!["EGRESADO", "ESTUDIANTE"].includes(tipo_usuario)) {
+            return res.status(400).json({
+                mensaje: "Debes seleccionar un tipo de persona válido"
             });
         }
 
@@ -92,7 +99,8 @@ const registrarUsuario = async (req, res) => {
                 email,
                 telefono,
                 contrasena,
-                rol
+                rol,
+                tipo_usuario
             )
             VALUES
             (
@@ -101,7 +109,8 @@ const registrarUsuario = async (req, res) => {
                 $3,
                 $4,
                 $5,
-                $6
+                $6,
+                $7
             )
             RETURNING
                 id_usuario,
@@ -109,7 +118,8 @@ const registrarUsuario = async (req, res) => {
                 apellidos,
                 email,
                 telefono,
-                rol
+                rol,
+                tipo_usuario
             `,
             [
                 nombres,
@@ -117,7 +127,8 @@ const registrarUsuario = async (req, res) => {
                 email,
                 telefono,
                 passwordHash,
-                "EGRESADO"
+                "USUARIO",
+                tipo_usuario
             ]
         );
 
@@ -140,6 +151,7 @@ const registrarUsuario = async (req, res) => {
     }
 
 };
+
 const loginUsuario = async (req, res) => {
 
     try {
@@ -161,7 +173,8 @@ const loginUsuario = async (req, res) => {
                 email,
                 telefono,
                 contrasena,
-                rol
+                rol,
+                tipo_usuario
             FROM usuario
             WHERE email = $1
             `,
@@ -208,7 +221,8 @@ const loginUsuario = async (req, res) => {
                 apellidos: usuario.apellidos,
                 email: usuario.email,
                 telefono: usuario.telefono,
-                rol: usuario.rol
+                rol: usuario.rol,
+                tipo_usuario: usuario.tipo_usuario
             }
         });
 
