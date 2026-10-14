@@ -96,6 +96,7 @@ develop
     ▼
 main
 
+```
 ---
 
 ## Cómo clonar el repositorio
