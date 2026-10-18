@@ -59,7 +59,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Crea una contraseña segura de al menos 8 caracteres para tu cuenta SAICI.',
+                    'Crea una contraseña segura de al menos 8 caracteres para tu cuenta LabAcces.',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 13, color: AppColors.textMuted),
                   ),

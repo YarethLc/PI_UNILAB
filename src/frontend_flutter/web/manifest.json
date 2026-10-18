@@ -1,0 +1,10 @@
+{
+  "name": "LabAcces · Reservas UCEVA",
+  "short_name": "LabAcces",
+  "description": "LabAcces · Sistema de Reserva de Espacios Universitarios UCEVA",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "prefer_related_applications": false
+}

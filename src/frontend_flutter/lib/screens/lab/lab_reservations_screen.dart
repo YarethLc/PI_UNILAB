@@ -3,6 +3,7 @@ import '../../core/constants/app_colors.dart';
 import '../../models/reservation_model.dart';
 import '../../services/api_service.dart';
 import '../../widgets/app_layout.dart';
+import '../../widgets/horizontal_table_scroll.dart';
 import '../../widgets/status_badge.dart';
 
 class LabReservationsScreen extends StatefulWidget {
@@ -119,8 +120,7 @@ class _LabReservationsScreenState extends State<LabReservationsScreen> {
                     ),
                   )
                 else
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
+                  HorizontalTableScroll(
                     child: DataTable(
                       headingRowColor: WidgetStateProperty.all(AppColors.frameBg),
                       columns: const [

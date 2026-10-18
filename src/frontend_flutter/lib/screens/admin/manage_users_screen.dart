@@ -3,6 +3,7 @@ import '../../core/constants/app_colors.dart';
 import '../../models/user_model.dart';
 import '../../services/api_service.dart';
 import '../../widgets/app_layout.dart';
+import '../../widgets/horizontal_table_scroll.dart';
 
 class ManageUsersScreen extends StatefulWidget {
   const ManageUsersScreen({super.key});
@@ -76,8 +77,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                           ),
                         )
                       else
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
+                        HorizontalTableScroll(
                           child: DataTable(
                             headingRowColor: WidgetStateProperty.all(AppColors.frameBg),
                             columns: const [

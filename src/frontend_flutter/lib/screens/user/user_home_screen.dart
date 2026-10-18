@@ -5,6 +5,7 @@ import '../../models/space_model.dart';
 import '../../services/api_service.dart';
 import '../../services/auth_session_service.dart';
 import '../../widgets/app_layout.dart';
+import '../../widgets/app_page_scroll_view.dart';
 import '../../widgets/space_card.dart';
 import '../../widgets/reservation_card.dart';
 
@@ -67,15 +68,16 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
     return AppLayout(
       currentRoute: '/user/home',
-      title: 'SAICI · Reservas UCEVA',
+      title: 'LabAcces · Reservas UCEVA',
       subtitle: user != null ? 'Bienvenido, ${user.fullName}' : null,
-      child: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadData,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(24),
+      mobilePageOwnsScroll: true,
+      child: RefreshIndicator(
+        onRefresh: _loadData,
+        child: AppPageScrollView(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : Padding(
+                  padding: const EdgeInsets.all(24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -305,7 +307,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                   ],
                 ),
               ),
-            ),
+        ),
+      ),
     );
   }
 

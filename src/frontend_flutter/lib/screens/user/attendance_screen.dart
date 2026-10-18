@@ -4,6 +4,7 @@ import '../../models/space_model.dart';
 import '../../services/api_service.dart';
 import '../../widgets/app_layout.dart';
 import '../../widgets/custom_text_field.dart';
+import '../../widgets/horizontal_table_scroll.dart';
 import '../../widgets/status_badge.dart';
 
 class AttendanceRecord {
@@ -218,8 +219,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                       ),
                     )
                   else
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
+                    HorizontalTableScroll(
                       child: DataTable(
                         headingRowColor: WidgetStateProperty.all(AppColors.frameBg),
                         columns: const [

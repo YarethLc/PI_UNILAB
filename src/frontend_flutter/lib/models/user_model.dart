@@ -41,12 +41,19 @@ class UserModel {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['id'] is int ? json['id'] : int.tryParse(json['id'].toString()) ?? 0,
+      id: json['id_usuario'] is int
+          ? json['id_usuario']
+          : json['id'] is int
+          ? json['id']
+          : int.tryParse(
+                  (json['id_usuario'] ?? json['id'] ?? '').toString(),
+                ) ??
+                0,
       nombres: json['nombres'] ?? json['nombre'] ?? '',
       apellidos: json['apellidos'] ?? '',
       correo: json['correo'] ?? json['email'] ?? '',
       telefono: json['telefono'] ?? json['phone'] ?? '',
-      tipo: json['tipo'] ?? 'Egresado',
+      tipo: json['tipo'] ?? json['tipo_usuario'] ?? 'Egresado',
       rol: json['rol'] ?? 'usuario',
     );
   }

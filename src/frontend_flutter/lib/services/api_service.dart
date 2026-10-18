@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/reservation_model.dart';
+import '../models/schedule_model.dart';
 import '../models/space_model.dart';
 import '../models/user_model.dart';
 import 'auth_session_service.dart';
@@ -231,6 +232,62 @@ class ApiService {
       return [];
     } catch (_) {
       return [];
+    }
+  }
+
+  static Future<List<ScheduleModel>> fetchSchedules({int? labId}) async {
+    final uri = labId != null
+        ? Uri.parse('$baseUrl/horarios?id_laboratorio=$labId')
+        : Uri.parse('$baseUrl/horarios');
+    final response = await http.get(
+      uri,
+      headers: _headers(),
+    );
+    if (response.statusCode != 200) {
+      throw Exception(_extractErrorMessage(response));
+    }
+
+    final data = jsonDecode(utf8.decode(response.bodyBytes));
+    if (data is! List) {
+      throw const FormatException('La respuesta de horarios no es una lista.');
+    }
+    return data
+        .map((item) => ScheduleModel.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  static Future<ScheduleModel> createSchedule({
+    required int weekday,
+    required String opensAt,
+    required String closesAt,
+    int? labId,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/horarios'),
+      headers: _headers(),
+      body: jsonEncode({
+        'dia_semana': weekday,
+        'hora_apertura': opensAt,
+        'hora_cierre': closesAt,
+        if (labId != null) 'id_laboratorio': labId,
+      }),
+    );
+    if (response.statusCode != 201) {
+      throw Exception(_extractErrorMessage(response));
+    }
+
+    final data = jsonDecode(utf8.decode(response.bodyBytes));
+    return ScheduleModel.fromJson(data['horario'] as Map<String, dynamic>);
+  }
+
+  static Future<void> setScheduleActive(int id, bool active) async {
+    final response = await http.patch(
+      Uri.parse('$baseUrl/horarios/$id/estado'),
+      headers: _headers(),
+      body: jsonEncode({'activo': active}),
+    );
+    if (response.statusCode != 200) {
+      throw Exception(_extractErrorMessage(response));
     }
   }
 

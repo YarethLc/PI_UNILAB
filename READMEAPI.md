@@ -5,314 +5,712 @@
 
 
 
-# SAICI - Sistema de Reserva de Espacios Universitarios (UCEVA)
+# LabAcces · Sistema de Reserva de Espacios Universitarios (UCEVA)
 
-Sistema integral de gestión, control de asistencia y reservas de laboratorios y salas académicas para la **Unidad Central del Valle del Cauca (UCEVA)**.
+Sistema integral para la gestión, control de asistencia y reserva de laboratorios y salas académicas de la **Unidad Central del Valle del Cauca (UCEVA)**.
 
-El proyecto está diseñado bajo una arquitectura desacoplada:
-* **Backend:** Node.js, Express, PostgreSQL 16, JSON Web Tokens (JWT) y hashing criptográfico con Bcrypt.
-* **Frontend:** Flutter & Dart (aplicación multiplataforma adaptada para Web y Móvil Android).
+> **Nota sobre el nombre:** el producto se llama **LabAcces**. Algunos identificadores internos conservan el nombre histórico `saici` (por ejemplo `saici_db`, `saici_token`, `saici_user`); son claves internas y **no deben cambiarse** sin una migración.
 
 ---
 
-## 🚀 Puesta en Marcha Rápida (Para Nuevos Clones)
+## 🏗️ Arquitectura
 
-Si un compañero clona el repositorio, tiene dos formas de ejecutarlo:
+| Capa | Tecnología |
+| :--- | :--- |
+| **Backend / API REST** | Node.js 18+, Express 5, PostgreSQL 16, JWT, Bcrypt, Nodemailer |
+| **Base de datos** | PostgreSQL 16 |
+| **Frontend** | Flutter 3.x / Dart 3.x (Web y Android) |
+| **Infraestructura local** | Docker + Docker Compose (PostgreSQL + Backend + pgAdmin) |
 
-### Opción A: Con Docker (Recomendada para todo el equipo) 🐳
-No requiere instalar PostgreSQL ni Node.js manualmente.
-1. Clona el repositorio y entra a la carpeta:
-   ```bash
-   git clone https://github.com/AndresBy02/Front-End_PI
-   cd Front-End_PI
-   ```
-2. Levanta la base de datos (con tablas y horarios automáticos) y el backend con un solo comando:
-   ```bash
-   docker compose up -d
-   ```
-   *El backend estará listo y escuchando en:* `http://localhost:3000`
-
----
-
-# Acceso a la Base de Datos — Proyecto Saici
-
-Este documento explica cómo conectarse a la base de datos PostgreSQL del proyecto
-usando **PgAdmin** (interfaz web incluida en Docker) y **TablePlus** (cliente de escritorio).
-
-La diferencia clave está en el **host**:
-
-- **PgAdmin** corre *dentro* de Docker → el host es el **nombre del servicio** (`db`).
-- **TablePlus** corre en tu máquina → el host es **`localhost`**.
-
----
-
-## 1. Datos generales de la BD
-
-| Parámetro        | Valor       |
-|------------------|-------------|
-| Motor            | PostgreSQL 16 |
-| Nombre de la BD  | `saici_db`  |
-| Usuario          | `postgres`  |
-| Contraseña       | `postgres`  |
-| Puerto interno   | `5432`      |
-
-Estos valores se definen en `docker-compose.yml`:
-
-```yaml
-environment:
-  POSTGRES_DB: saici_db
-  POSTGRES_USER: postgres
-  POSTGRES_PASSWORD: postgres
+```text
+Flutter (Web / Android)
+        │  HTTP + JWT
+        ▼
+Backend Node/Express :3000
+        │  SQL
+        ▼
+PostgreSQL 16 :5432  ◄── pgAdmin :5050 (opcional)
 ```
 
 ---
 
-## 2. Ingresar desde PgAdmin (navegador)
+## ✨ Funcionalidades
 
-### 2.1 Abrir PgAdmin
+- **Autenticación:** login, registro de estudiantes/egresados, recuperación de contraseña con código OTP y cambio de clave.
+- **Panel de estudiante:** inicio, catálogo de laboratorios, asistente de reserva, mis reservas, historial y perfil.
+- **Panel administrativo:** dashboard con KPIs, gestión de reservas, CRUD de espacios, horarios, usuarios y **estadísticas con gráficos de pastel y barras**.
+- **Panel de encargado de laboratorio:** reservas asignadas y aprobación de solicitudes.
+- **Horarios:** franjas por día, activables/desactivables, **globales o asociadas a un laboratorio específico**.
+- **Validaciones de reserva:** fecha no pasada, horario permitido, cupo por laboratorio, cruces de horario del usuario y estado del laboratorio.
 
-Con los contenedores levantados (`docker compose up -d`), entra desde el navegador a:
+---
 
+## ✅ Requisitos e Instalación de Herramientas
+
+| Herramienta | Versión recomendada | ¿Para qué se necesita? | ¿Obligatoria? |
+| :--- | :--- | :--- | :--- |
+| **Git** | 2.40+ | Clonar el repositorio | Sí |
+| **Docker Desktop** | 4.x+ (Docker 24+) | Levantar backend + PostgreSQL + pgAdmin | Recomendada |
+| **Node.js** | 18+ (probado con 24) | Ejecutar el backend sin Docker | Solo opción nativa |
+| **PostgreSQL** | 16 | BD sin Docker | Solo opción nativa |
+| **Flutter SDK** | 3.x estable (probado con 3.47.7 / Dart 3.13.5) | Compilar y ejecutar el frontend | Sí |
+| **Chrome o Edge** | Última versión | Ejecutar el frontend en Web | Sí (equipo web) |
+| **Android Studio** | Hedgehog+ con SDK 34+ | Emulador y compilación Android | Opcional |
+| **VS Code** (opcional) | Última versión | Editar código y scripts NPM | Opcional |
+
+### Verificar que todo esté instalado
+
+```powershell
+git --version
+docker --version
+docker compose version
+node --version
+npm --version
+flutter --version
+flutter doctor
 ```
-http://localhost:5050
+
+`flutter doctor` debe mostrar al menos **Flutter**, **Chrome** y, si usarás Android, **Android toolchain** en verde.
+
+### Instalar Flutter en Windows (si no lo tienes)
+
+Opción 1 (winget):
+
+```powershell
+winget install Google.Flutter
 ```
 
-> El enlace también aparece en Docker Desktop al hacer clic en el contenedor `saici-pgadmin`
-> (puerto **5050** → 80).
+Opción 2 (manual):
 
-### 2.2 Credenciales de la aplicación PgAdmin
+1. Descarga el SDK: <https://docs.flutter.dev/get-started/install/windows>
+2. Descomprímelo en una ruta sin espacios, por ejemplo `C:\src\flutter`.
+3. Agrega `C:\src\flutter\bin` al **PATH** de Windows.
+4. Cierra y abre la terminal, luego:
 
-| Campo    | Valor             |
-|----------|-------------------|
-| Email    | `admin@saici.com` |
-| Password | `admin`           |
-
-### 2.3 Registrar el servidor PostgreSQL
-
-Una vez dentro, click derecho en **Servers → Register → Server…** y en la pestaña **Connection** usa:
-
-| Campo                     | Valor        |
-|---------------------------|--------------|
-| **Host name/address**     | `db`         |
-| **Port**                  | `5432`       |
-| **Maintenance database**  | `saici_db`   |
-| **Username**              | `postgres`   |
-| **Password**              | `postgres`   |
-| **Save password?**        | ✅ Activado  |
-
-> ⚠️ Importante: en PgAdmin el host es **`db`** (el nombre del servicio en Docker),
-> **NO** `localhost`. PgAdmin corre dentro de la misma red Docker que PostgreSQL.
-
-Click en **Save** → la base `saici_db` aparecerá en el panel izquierdo.
-
----
-
-## 3. Ingresar desde TablePlus (cliente de escritorio)
-
-TablePlus corre **en tu máquina**, no dentro de Docker, por eso usa `localhost`
-y el puerto publicado en el `docker-compose.yml` (`5432:5432`).
-
-### 3.1 Crear la conexión
-
-En TablePlus: **Create a new connection → PostgreSQL** y llena:
-
-| Campo     | Valor        |
-|-----------|--------------|
-| **Name**  | `Saici (Docker)` |
-| **Host**  | `localhost`  |
-| **Port**  | `5432`       |
-| **User**  | `postgres`   |
-| **Password** | `postgres` |
-| **Database** | `saici_db` |
-
-### 3.2 Configuración SSL
-
-En la pestaña **TLS/SSL**, deja SSL **desactivado** (PostgreSQL en Docker no usa SSL en local).
-
-Click en **Test** → **Connect**.
-
-> ⚠️ En TablePlus el host es **`localhost`** (o `127.0.0.1`), **NO** `db`.
-> El nombre `db` solo existe dentro de la red de Docker.
-
----
-
-## 4. Resumen comparativo
-
-| Parámetro      | PgAdmin (navegador) | TablePlus (escritorio) |
-|----------------|---------------------|------------------------|
-| Host           | `db`                | `localhost`            |
-| Puerto         | `5432`              | `5432`                 |
-| Database       | `saici_db`          | `saici_db`             |
-| Usuario        | `postgres`          | `postgres`             |
-| Contraseña     | `postgres`          | `postgres`             |
-| SSL            | N/A                 | Desactivado            |
-| URL de acceso  | `http://localhost:5050` | —                  |
-
----
-
-## 5. URLs del proyecto
-
-| URL                          | Servicio                |
-|------------------------------|-------------------------|
-| `http://localhost:5050`      | PgAdmin (ver la BD)     |
-| `http://localhost:3000`      | Backend / API Saici     |
-| `localhost:5432`             | Puerto crudo de Postgres (solo clientes SQL, **no navegador**) |
-
-> 🔴 `http://localhost:5432` **NO abre en el navegador**. PostgreSQL no habla HTTP;
-> es un protocolo binario propio. Para verlo en navegador usa PgAdmin (`5050`).
-
----
-
-## 6. Comandos útiles
-
-```bash
-# Levantar todo
-docker compose up -d
-
-# Ver contenedores activos
-docker ps
-
-# Logs del backend
-docker logs saici-backend
-
-# Logs de PgAdmin
-docker logs saici-pgadmin
-
-# Entrar a psql desde consola
-docker exec -it saici-postgres psql -U postgres -d saici_db
-
-# Reinicio limpio (⚠️ borra datos de la BD)
-docker compose down -v
-docker compose up -d
+```powershell
+flutter doctor
+flutter doctor --android-licenses   # solo si usarás Android
 ```
 
 ---
 
-## 7. Solución de problemas
+## 🚀 Puesta en Marcha para un Clon Nuevo (Docker, recomendado)
 
-| Problema | Causa | Solución |
-|---|---|---|
-| PgAdmin no abre en `localhost:5050` | Contenedor caído o puerto ocupado | `docker logs saici-pgadmin`; cambiar a `"5051:80"` |
-| Error "password authentication failed" | Credenciales viejas en el volumen | `docker compose down -v` y volver a levantar |
-| TablePlus no conecta | Host incorrecto (`db` en vez de `localhost`) | Cambiar host a `localhost` |
-| Error SSL en TablePlus | SSL activado | Desactivar SSL en pestaña TLS/SSL |
-| `saici_db` no existe | `init.sql` falló o volumen previo | Revisar `docker logs saici-postgres` y limpiar volumen |
+No requiere instalar Node.js ni PostgreSQL manualmente.
 
-### Opción B: Ejecución Local Nativa (Sin Docker) 💻
+### 1. Clonar el repositorio
 
-#### 1. Configurar Base de Datos (PostgreSQL)
-1. Abre tu cliente de PostgreSQL (pgAdmin / TablePlus / DBeaver).
-2. Crea la base de datos: `saici_db`.
-3. Ejecuta el archivo [`BD_Saici.sql`](./BD_Saici.sql) para crear las tablas, usuarios y horarios de atención.
+```powershell
+git clone https://github.com/YarethLc/PI_UNILAB.git
+cd PI_UNILAB
+```
 
-#### 2. Configurar y Levantar el Backend (Node.js)
-1. En la raíz del proyecto, copia las variables de entorno:
-   ```powershell
-   Copy-Item .env.example .env
-   ```
-2. Instala las dependencias:
-   ```powershell
-   npm install
-   ```
-3. Inicia el servidor:
-   * **Modo desarrollo (Recomendado):**
-     ```powershell
-     npm run dev
-     ```
-     *(Usa `nodemon`: reinicia automáticamente el servidor cada vez que guardas un cambio en el código).*
-   * **Modo producción simple:**
-     ```powershell
-     node src/server.js
-     # o
-     npm start
-     ```
-     *(Inicia el servidor directamente sin recarga automática).*
+### 2. Levantar los servicios
 
----
+```powershell
+docker compose up -d --build
+```
 
-## 💻 Cómo Iniciar el Backend desde VS Code (Sin escribir comandos)
+Esto crea y arranca:
 
-1. Abre la carpeta del proyecto en **Visual Studio Code**.
-2. En la barra lateral izquierda, abre la pestaña de **NPM Scripts** (o presiona `Ctrl + Shift + P` y escribe `Run Task`).
-3. Verás una lista con `dev`, `start`, `test`:
-   - Haz clic en el botón de **Play ▶** al lado de **`dev`**.
-4. Se abrirá una terminal interna ejecutando el servidor backend automáticamente.
+| Servicio | Contenedor | URL / Puerto |
+| :--- | :--- | :--- |
+| Backend / API | `saici-backend` | `http://localhost:3000` |
+| PostgreSQL 16 | `saici-postgres` | `localhost:5432` |
+| pgAdmin 4 | `saici-pgadmin` | `http://localhost:5050` |
 
----
+La primera vez, PostgreSQL ejecuta automáticamente `BD_Saici.sql` (tablas, usuarios y horarios de prueba).
 
-## 📱 Ejecutar el Frontend (Flutter & Dart)
+### 3. Verificar que el backend responde
 
-Abre una terminal y dirígete a la carpeta de Flutter:
+```powershell
+Invoke-WebRequest http://localhost:3000 -UseBasicParsing | Select-Object -ExpandProperty Content
+```
+
+Debe responder:
+
+```json
+{"mensaje":"API de reservas funcionando correctamente"}
+```
+
+### 4. Levantar el frontend
+
 ```powershell
 cd src/frontend_flutter
 flutter pub get
-```
-
-### 1. En Navegador Web (Chrome / Edge)
-```powershell
 flutter run -d chrome
 ```
-*También puedes fijar el puerto si lo deseas:* `flutter run -d chrome --web-port=8080`.
-
-### 2. En Android Studio o Celular Físico
-1. Abre la carpeta `src/frontend_flutter` en **Android Studio**.
-2. Selecciona tu emulador o tu celular físico conectado por USB.
-3. Presiona el botón verde de **Run (Play)** ▶.
-
-> [!NOTE]
-> La aplicación detecta automáticamente si corre en Web o en Android. En Android se conecta a la máquina host a través de `http://10.0.2.2:3000/api` y en Web mediante `http://localhost:3000/api`.
 
 ---
 
-## 👥 Credenciales de Prueba del Sistema
+## 🔄 Si Ya Tenías el Proyecto Clonado (Actualización Obligatoria)
 
-La base de datos viene precargada con las siguientes cuentas de prueba:
+Si ya descargaste el proyecto antes y vas a usar la versión actualizada (por ejemplo, por los cambios de horarios, gráficos o backend), **no basta con `docker compose up -d`**. Debes bajar los contenedores y volver a levantarlos para reconstruir la imagen del backend:
 
-| Rol | Correo Electrónico | Contraseña | Panel Destino |
-| :--- | :--- | :--- | :--- |
-| **Administrador** | `admin@uceva.edu.co` | `Admin123456!` | Panel Administrativo (`/admin/dashboard`) |
-| **Laboratorio** | `laboratorio@uceva.edu.co` | `Lab123456!` | Panel de Encargado (`/lab/dashboard`) |
-| **Estudiante / Egresado** | `estudiante.test@uceva.edu.co` | `Estudiante123!` | Panel de Estudiante (`/user/home`) |
+```powershell
+# 1. Ubicarte en la carpeta del proyecto
+cd PI_UNILAB
 
-*(También puedes registrar un usuario nuevo directamente desde el formulario de **"Regístrate aquí"**).*
+# 2. Bajar los contenedores (conserva los datos de PostgreSQL)
+docker compose down
+
+# 3. Volver a levantar y reconstruir las imágenes
+docker compose up -d --build
+```
+
+> ⚠️ **Importante:** al bajar y volver a crear los contenedores, **pgAdmin pierde el servidor registrado** (su configuración no está en un volumen persistente). Por eso, después de levantarlo de nuevo debes **volver a agregar la base de datos en pgAdmin web**:
+>
+> 1. Abre <http://localhost:5050> e inicia sesión con `admin@saici.com` / `admin`.
+> 2. Clic derecho en **Servers → Register → Server…**
+> 3. En la pestaña **Connection** usa:
+>    - **Host name/address:** `db`
+>    - **Port:** `5432`
+>    - **Maintenance database:** `saici_db`
+>    - **Username:** `postgres`
+>    - **Password:** `postgres`
+> 4. Clic en **Save**.
+
+Si además quieres **reiniciar la base de datos desde cero** (⚠️ **borra todos los datos** y vuelve a ejecutar `BD_Saici.sql`):
+
+```powershell
+docker compose down -v
+docker compose up -d --build
+```
+
+### Aplicar migraciones si conservaste una base anterior
+
+Si hiciste `docker compose down` (sin `-v`), tus datos se conservan, pero debes aplicar las migraciones nuevas:
+
+```powershell
+docker exec -i saici-postgres psql -U postgres -d saici_db < migrations/001_horario_activo.sql
+docker exec -i saici-postgres psql -U postgres -d saici_db < migrations/002_horario_laboratorio.sql
+```
+
+> Las migraciones usan `IF NOT EXISTS`, así que se pueden ejecutar varias veces sin problema.
+
+### Actualizar el frontend
+
+```powershell
+cd src/frontend_flutter
+flutter pub get
+flutter clean          # recomendado si hubo errores de compilación
+flutter run -d chrome
+```
+
+### ⚠️ Regla importante al modificar el backend
+
+El código del backend se **copia dentro de la imagen** de Docker. Cada vez que cambie algo en `src/modules/`, `src/app.js`, `src/server.js`, etc., reconstruye:
+
+```powershell
+docker compose up -d --build backend
+```
+
+Si solo cambia el frontend Flutter, **no** hace falta reconstruir Docker; basta con hot reload / hot restart.
 
 ---
 
-## ⏰ Horarios de Atención Registrados
+## 💻 Opción B — Ejecución Local Nativa (sin Docker)
 
-| Días | Horario de Apertura y Cierre |
+### 1. Base de datos
+
+1. Instala PostgreSQL 16 y crea la base de datos `saici_db`.
+2. Ejecuta el script [`BD_Saici.sql`](./BD_Saici.sql) sobre esa base.
+3. Si la base ya existía, aplica las migraciones pendientes (ver sección **Migraciones**).
+
+### 2. Backend
+
+En la raíz del proyecto:
+
+```powershell
+Copy-Item .env.example .env
+npm install
+npm run dev
+```
+
+- `npm run dev` → modo desarrollo con `nodemon` (recarga automática).
+- `npm start` → modo normal (`node src/server.js`).
+
+Variables de `.env`:
+
+```env
+PORT=3000
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=saici_db
+DB_USER=postgres
+DB_PASSWORD=postgres
+JWT_SECRET=saici_super_secret_jwt_token_2026_uceva
+EMAIL_USER=soporte@uceva.edu.co
+EMAIL_PASS=tu_clave_de_aplicacion
+```
+
+> Si usas Docker y un backend nativo al mismo tiempo, cambia `PORT` o detén uno de los dos para evitar conflictos en el puerto 3000.
+
+#### Iniciar el backend desde VS Code (sin escribir comandos)
+
+1. Abre la carpeta del proyecto en **Visual Studio Code**.
+2. En la barra lateral abre **NPM Scripts** (o `Ctrl + Shift + P` → **Run Task**).
+3. Pulsa **▶** en `dev`.
+4. Se abre una terminal interna con el backend en ejecución y recarga automática.
+
+### 3. Frontend
+
+```powershell
+cd src/frontend_flutter
+flutter pub get
+flutter run -d chrome
+```
+
+---
+
+## 📱 Ejecutar el Frontend Flutter
+
+La conexión al backend se define en [`lib/services/api_service.dart`](./src/frontend_flutter/lib/services/api_service.dart):
+
+| Entorno | URL usada automáticamente |
 | :--- | :--- |
-| **Lunes a Viernes** | 07:00:00 a 22:00:00 |
-| **Sábados** | 08:00:00 a 18:00:00 |
+| Web (Chrome / Edge) | `http://localhost:3000/api` |
+| Emulador Android | `http://10.0.2.2:3000/api` (IP del host vista desde el emulador) |
+| Celular físico | Requiere cambiar a la **IP LAN del PC** (ver abajo) |
+
+### Web
+
+```powershell
+cd src/frontend_flutter
+flutter run -d chrome
+# Puerto fijo opcional:
+flutter run -d chrome --web-port=8080
+```
+
+### Emulador Android
+
+1. Abre Android Studio → **Device Manager** → inicia un emulador.
+2. Verifica que Flutter lo detecte:
+
+```powershell
+flutter devices
+flutter run -d emulator-5554
+```
+
+### Celular físico (USB)
+
+1. Activa **Opciones de desarrollador** y **Depuración USB**.
+2. Conecta el celular y acepta la autorización.
+3. El celular y el PC deben estar en la **misma red Wi-Fi**.
+4. Obtén la IP del PC:
+
+```powershell
+ipconfig
+```
+
+5. En `api_service.dart`, reemplaza la URL de Android por la IP LAN, por ejemplo:
+
+```dart
+return 'http://192.168.1.50:3000/api';
+```
+
+6. El backend ya permite conexiones externas (`cors: *`), pero verifica el Firewall de Windows si no conecta.
+
+### Compilar para producción (Web)
+
+```powershell
+cd src/frontend_flutter
+flutter build web
+```
+
+El resultado queda en `build/web`. Para probarlo localmente:
+
+```powershell
+python -m http.server 8090 --directory build/web
+# Abrir http://localhost:8090
+```
+
+> Para producción, cambia `baseUrl` en `api_service.dart` por el dominio real del backend (HTTPS).
+
+---
+
+## 🗄️ Acceso a la Base de Datos
+
+### Datos generales
+
+| Parámetro | Valor |
+| :--- | :--- |
+| Motor | PostgreSQL 16 |
+| Base de datos | `saici_db` |
+| Usuario | `postgres` |
+| Contraseña | `postgres` |
+| Puerto | `5432` |
+
+### pgAdmin (navegador)
+
+1. Abre <http://localhost:5050>.
+2. Inicia sesión con:
+   - **Email:** `admin@saici.com`
+   - **Password:** `admin`
+3. Clic derecho en **Servers → Register → Server…** y en la pestaña **Connection**:
+
+| Campo | Valor |
+| :--- | :--- |
+| Host name/address | `db` |
+| Port | `5432` |
+| Maintenance database | `saici_db` |
+| Username | `postgres` |
+| Password | `postgres` |
+
+> ⚠️ En pgAdmin el host es **`db`** porque corre dentro de la red Docker. **No** uses `localhost` ahí.
+
+### TablePlus / DBeaver / cliente de escritorio
+
+Estos clientes corren **en tu máquina**, no dentro de Docker, por eso usan `localhost` y el puerto publicado (`5432:5432`).
+
+**TablePlus:** *Create a new connection → PostgreSQL* y completa:
+
+| Campo | Valor |
+| :--- | :--- |
+| Name | `LabAcces (Docker)` |
+| Host | `localhost` (o `127.0.0.1`) |
+| Port | `5432` |
+| User | `postgres` |
+| Password | `postgres` |
+| Database | `saici_db` |
+| SSL | Desactivado (pestaña **TLS/SSL**) |
+
+Pulsa **Test** y luego **Connect**.
+
+> ⚠️ En clientes de escritorio el host es **`localhost`**; el nombre `db` solo existe dentro de Docker.
+
+> 🔴 `http://localhost:5432` **no abre en el navegador**: PostgreSQL usa un protocolo binario propio, no HTTP. Para verlo en el navegador entra a pgAdmin (`http://localhost:5050`); para consultarlo por consola usa `psql` o un cliente SQL.
+
+### Resumen comparativo de conexión
+
+| Parámetro | pgAdmin (navegador) | TablePlus / DBeaver (escritorio) |
+| :--- | :--- | :--- |
+| Host | `db` | `localhost` / `127.0.0.1` |
+| Puerto | `5432` | `5432` |
+| Base de datos | `saici_db` | `saici_db` |
+| Usuario | `postgres` | `postgres` |
+| Contraseña | `postgres` | `postgres` |
+| SSL | N/A | Desactivado |
+
+### URLs del proyecto
+
+| URL | Servicio |
+| :--- | :--- |
+| `http://localhost:3000` | Backend / API |
+| `http://localhost:5050` | pgAdmin (ver la BD en el navegador) |
+| `localhost:5432` | Puerto de PostgreSQL (solo clientes SQL, **no navegador**) |
+
+
+### Migraciones
+
+| Migración | Qué agrega |
+| :--- | :--- |
+| `001_horario_activo.sql` | Columna `activo` en `horario` y domingo desactivado |
+| `002_horario_laboratorio.sql` | Columna `id_laboratorio` en `horario` (franjas por laboratorio) |
+
+```powershell
+# Con psql local
+psql -U postgres -d saici_db -f migrations/001_horario_activo.sql
+psql -U postgres -d saici_db -f migrations/002_horario_laboratorio.sql
+
+# Con Docker
+docker exec -i saici-postgres psql -U postgres -d saici_db < migrations/001_horario_activo.sql
+docker exec -i saici-postgres psql -U postgres -d saici_db < migrations/002_horario_laboratorio.sql
+```
+
+> Las migraciones usan `IF NOT EXISTS`, por lo que son seguras de re-ejecutar.
+
+---
+
+## 👥 Credenciales de Prueba
+
+| Rol | Correo | Contraseña | Panel |
+| :--- | :--- | :--- | :--- |
+| **Administrador** | `admin@uceva.edu.co` | `Admin123456!` | `/admin/dashboard` |
+| **Encargado de laboratorio** | `laboratorio@uceva.edu.co` | `Lab123456!` | `/lab/dashboard` |
+| **Estudiante** | `estudiante.test@uceva.edu.co` | `Estudiante123!` | `/user/home` |
+
+También puedes registrar un usuario nuevo desde **“Regístrate aquí”** en el login.
+
+### Roles del sistema
+
+- `ADMINISTRADOR` → acceso total (reservas, espacios, horarios, usuarios, reportes).
+- `LABORATORIO` → reservas asignadas y aprobación.
+- `USUARIO` + `tipo_usuario` (`ESTUDIANTE` / `EGRESADO`) → catálogo, reservas, historial y perfil.
+
+---
+
+## ⏰ Horarios y Franjas
+
+Por defecto:
+
+| Días | Horario |
+| :--- | :--- |
+| Lunes a Viernes | 07:00 – 22:00 |
+| Sábados | 08:00 – 18:00 |
+| Domingos | Desactivado (franja 08:00 – 14:00, apagada) |
+
+En **Administración → Configurar Horarios** puedes:
+
+- Crear una franja **para todos los laboratorios** (global).
+- Crear una franja **para un laboratorio específico**.
+- Filtrar la tabla por laboratorio.
+- Activar/desactivar cada franja.
+
+**Prioridad de validación:** si un laboratorio tiene una franja propia para ese día, se usa esa; si no, se aplica la franja global.
+
+---
+
+## 🔌 Endpoints Principales de la API
+
+Todas las rutas (excepto login/registro/recuperación) requieren `Authorization: Bearer <token>`.
+
+### Autenticación — `/api/auth`
+
+| Método | Ruta | Descripción |
+| :--- | :--- | :--- |
+| POST | `/register` · `/registro` | Registrar usuario |
+| POST | `/login` | Iniciar sesión (devuelve JWT + usuario) |
+| POST | `/recuperar-password` | Enviar código OTP |
+| POST | `/verificar-codigo` | Validar OTP |
+| POST | `/nueva-password` | Cambiar contraseña con OTP |
+| GET | `/perfil` | Datos del usuario autenticado |
+| PUT | `/perfil` | Actualizar perfil |
+| PUT | `/cambiar-password` | Cambiar contraseña |
+| GET | `/usuarios` | Listar usuarios (solo ADMINISTRADOR) |
+
+### Reservas — `/api/reservas`
+
+| Método | Ruta | Descripción |
+| :--- | :--- | :--- |
+| POST | `/` | Crear reserva |
+| GET | `/` | Listar (propias o todas según rol) |
+| GET | `/:id` | Detalle |
+| PUT | `/:id` | Editar |
+| DELETE | `/:id` | Cancelar |
+| PATCH | `/:id/estado` | Aprobar / finalizar (ADMIN o LAB) |
+
+### Laboratorios — `/api/laboratorios`
+
+| Método | Ruta | Descripción |
+| :--- | :--- | :--- |
+| GET | `/` · `/:id` | Consultar |
+| POST | `/` | Crear (ADMIN o LAB) |
+| PUT | `/:id` | Editar (ADMIN o LAB) |
+| DELETE | `/:id` | Eliminar (solo ADMIN) |
+
+### Horarios — `/api/horarios`
+
+| Método | Ruta | Descripción |
+| :--- | :--- | :--- |
+| GET | `/` · `/?id_laboratorio=1` | Listar (opcionalmente filtrado) |
+| POST | `/` | Crear franja (solo ADMIN) |
+| PATCH | `/:id/estado` | Activar/desactivar (solo ADMIN) |
+
+---
+
+## 🧪 Pruebas y Calidad
+
+```powershell
+# Backend: verificación de seguridad y roles (requiere BD y backend activos)
+npm test
+
+# Frontend: análisis estático
+cd src/frontend_flutter
+flutter analyze
+
+# Frontend: pruebas
+flutter test
+```
+
+---
+
+## 🧰 Comandos Útiles
+
+```powershell
+# Levantar todo (primera vez o tras cambios de backend)
+docker compose up -d --build
+
+# Reconstruir solo el backend tras cambiar código
+docker compose up -d --build backend
+
+# Bajar los contenedores (conserva los datos de PostgreSQL)
+docker compose down
+
+# Reinicio limpio (⚠️ BORRA todos los datos de la BD)
+docker compose down -v
+docker compose up -d --build
+
+# Ver contenedores
+docker ps
+
+# Logs del backend (seguimiento en vivo)
+docker logs -f saici-backend
+
+# Logs de PostgreSQL
+docker logs saici-postgres
+
+# Logs de pgAdmin
+docker logs saici-pgadmin
+
+# Entrar a psql
+docker exec -it saici-postgres psql -U postgres -d saici_db
+
+# Flutter
+cd src/frontend_flutter
+flutter pub get
+flutter clean          # si hay errores raros de compilación
+flutter run -d chrome
+flutter build web
+```
+
+---
+
+## 🆘 Solución de Problemas
+
+| Problema | Causa probable | Solución |
+| :--- | :--- | :--- |
+| `fflutter` / `flutter` no se reconoce | Error de escritura o PATH | Escribe `flutter`. Agrega `C:\...\flutter\bin` al PATH y reinicia la terminal |
+| `Failed to compile application` en Flutter | Error de Dart | Ejecuta `flutter analyze` y corrige el archivo indicado |
+| Pantalla en blanco tras iniciar sesión | Error de layout/excepción | Detén y vuelve a ejecutar (no solo hot reload); revisa la consola del navegador |
+| El footer ocupa toda la pantalla / no aparece | Botón con `minimumSize` infinito dentro de un `Row` | Revisar `custom_footer.dart` (ya corregido: `minimumSize: Size(0, 40)`) |
+| `A ScrollController is required when Scrollbar.thumbVisibility is true` | `Scrollbar` con `thumbVisibility` sin controlador | Pasa el mismo `ScrollController` al `Scrollbar` y al scroll |
+| El backend no refleja cambios | Imagen Docker antigua | `docker compose up -d --build backend` |
+| pgAdmin aparece vacío tras reiniciar contenedores | pgAdmin perdió el servidor registrado | Volver a registrarlo: host `db`, puerto `5432`, base `saici_db` |
+| `401 No autorizado` | Token vencido o sesión inválida | Cerrar sesión y volver a iniciar |
+| `Recurso no encontrado` en horarios | Backend/imagen sin el módulo de horarios | Reconstruir backend y verificar `/api/horarios` |
+| `connection refused` en Web | Backend apagado o puerto ocupado | `docker ps`; revisar `docker logs saici-backend`; liberar el puerto 3000 |
+| `connection refused` en celular físico | Usa `localhost` o IP incorrecta | Cambiar `baseUrl` a la IP LAN del PC y estar en la misma red |
+| pgAdmin no conecta a la BD | Host incorrecto | Usar `db` en pgAdmin y `localhost` en clientes de escritorio |
+| `password authentication failed` | Volumen con credenciales antiguas | `docker compose down -v` y volver a levantar (⚠️ borra datos) |
+| La BD no tiene `id_laboratorio` en `horario` | Falta migración | Aplicar `migrations/002_horario_laboratorio.sql` |
+| Emulador Android en negro desde el arranque | Problema gráfico del emulador/Impeller | Cold Boot del AVD, Graphics = Software GLES 2.0, o `flutter run --no-enable-impeller` |
+| Error de CORS | Backend no iniciado o proxy | El backend ya permite `*`; verifica que la API responda en `:3000` |
+| Puerto 3000/5050/5432 ocupado | Otro proceso o contenedor | `docker compose down`, cerrar el proceso o cambiar el puerto en `docker-compose.yml` |
 
 ---
 
 ## 📁 Estructura del Repositorio
 
 ```text
-Front-End_PI/
-├── Dockerfile                   # Configuración para contenerizar el Backend
-├── docker-compose.yml           # Orquestación de PostgreSQL + Backend en 1 comando
-├── BD_Saici.sql                 # Script DDL/DML (Tablas, Semillas y Horarios)
-├── .env.example                 # Plantilla de variables de entorno
-├── package.json                 # Dependencias y scripts de Node.js
-├── src/
-│   ├── app.js                   # Configuración Express y middlewares
-│   ├── server.js                # Entrada del servidor HTTP (Puerto 3000)
-│   ├── config/db.js             # Pool de conexión a PostgreSQL
-│   ├── modules/
-│   │   ├── auth/                # Login, registro, perfil, cambio de clave
-│   │   ├── reserva/             # Validaciones, horarios y reservas
-│   │   └── laboratorios/        # Catálogo de laboratorios y espacios
-│   └── frontend_flutter/        # APLICACIÓN FLUTTER MULTIPLATAFORMA
-│       ├── pubspec.yaml         # Dependencias Flutter
-│       ├── android/             # Configuración nativa Android / Gradle
-│       └── lib/
-│           ├── main.dart        # Entrada de Flutter
-│           ├── services/        # ApiService con conexión dinámica a backend
-│           └── screens/
-│               ├── auth/        # Login y registro
-│               ├── admin/       # Dashboard administrativo y gestión de reservas
-│               ├── user/        # Reservas, catálogo y perfil de estudiante
-│               └── lab/         # Dashboard del encargado de laboratorio
+PI_UNILAB/
+├── Dockerfile                          # Imagen del backend (Node 18 Alpine)
+├── docker-compose.yml                  # PostgreSQL + Backend + pgAdmin
+├── BD_Saici.sql                        # Esquema, usuarios, laboratorios y horarios
+├── package.json                        # Scripts y dependencias del backend
+├── package-lock.json
+├── .env.example                        # Plantilla de variables de entorno
+├── .gitignore
+├── README.md
+├── migrations/
+│   ├── 001_horario_activo.sql
+│   └── 002_horario_laboratorio.sql
+├── test/
+│   └── verify_security_and_roles.js    # Pruebas de seguridad y roles
+├── .github/                            # Configuración de GitHub (modernize)
+├── .vscode/
+│   └── launch.json
+└── src/
+    ├── app.js                          # Express, CORS y montaje de rutas
+    ├── server.js                       # Arranque HTTP (puerto 3000)
+    ├── config/
+    │   └── db.js                       # Pool de conexión a PostgreSQL
+    ├── middlewares/
+    │   └── authMiddleware.js           # verificarToken y autorizarRoles
+    ├── utils/
+    │   └── generarOTP.js               # Generación de códigos de recuperación
+    ├── modules/
+    │   ├── auth/
+    │   │   ├── authController.js
+    │   │   ├── authRoutes.js
+    │   │   └── emailService.js
+    │   ├── reserva/
+    │   │   ├── reservaController.js
+    │   │   ├── reservaRoutes.js
+    │   │   └── reservaService.js
+    │   ├── laboratorios/
+    │   │   ├── laboratorioController.js
+    │   │   └── laboratorioRoutes.js
+    │   └── horarios/
+    │       ├── horarioController.js
+    │       └── horarioRoutes.js
+    └── frontend_flutter/               # Aplicación Flutter (Web y Android)
+        ├── pubspec.yaml
+        ├── android/                    # Configuración nativa Android/Gradle
+        ├── web/                        # index.html y assets web
+        ├── assets/
+        │   └── images/                 # Logos y banner institucional
+        ├── test/
+        └── lib/
+            ├── main.dart
+            ├── core/
+            │   ├── constants/app_colors.dart
+            │   ├── routes/app_routes.dart
+            │   └── theme/app_theme.dart
+            ├── models/
+            │   ├── attendance_model.dart
+            │   ├── reservation_model.dart
+            │   ├── schedule_model.dart
+            │   ├── space_model.dart
+            │   └── user_model.dart
+            ├── services/
+            │   ├── api_service.dart
+            │   └── auth_session_service.dart
+            ├── widgets/
+            │   ├── app_layout.dart
+            │   ├── app_page_scroll_view.dart
+            │   ├── custom_footer.dart
+            │   ├── custom_text_field.dart
+            │   ├── horizontal_table_scroll.dart
+            │   ├── reservation_card.dart
+            │   ├── simple_charts.dart
+            │   ├── space_card.dart
+            │   └── status_badge.dart
+            └── screens/
+                ├── auth/
+                │   ├── login_screen.dart
+                │   ├── register_egresado_screen.dart
+                │   ├── forgot_password_screen.dart
+                │   ├── otp_verification_screen.dart
+                │   └── reset_password_screen.dart
+                ├── admin/
+                │   ├── admin_dashboard_screen.dart
+                │   ├── manage_reservations_screen.dart
+                │   ├── manage_spaces_screen.dart
+                │   ├── manage_schedules_screen.dart
+                │   ├── manage_users_screen.dart
+                │   └── reports_screen.dart
+                ├── user/
+                │   ├── user_home_screen.dart
+                │   ├── explore_spaces_screen.dart
+                │   ├── space_detail_screen.dart
+                │   ├── reservation_wizard_screen.dart
+                │   ├── my_reservations_screen.dart
+                │   ├── reservation_history_screen.dart
+                │   ├── attendance_screen.dart
+                │   └── profile_screen.dart
+                └── lab/
+                    ├── lab_dashboard_screen.dart
+                    └── lab_reservations_screen.dart
 ```
+
+> Las carpetas `build/`, `.dart_tool/` y `.idea/` se generan automáticamente al compilar o abrir el proyecto; no forman parte del código fuente y están excluidas por `.gitignore`.
+
+---
+
+## 🤝 Flujo de Trabajo Recomendado
+
+1. Crea una rama por funcionalidad: `git checkout -b feature/mi-cambio`.
+2. Haz cambios pequeños y verifica:
+   ```powershell
+   flutter analyze
+   npm test
+   ```
+3. Haz commit con un mensaje claro:
+   ```powershell
+   git add .
+   git commit -m "feat: descripción del cambio"
+   ```
+4. Sube la rama y abre un Pull Request.
+
+> Evita cambiar de rama con cambios sin commitear: es la causa más común de perder trabajo.

@@ -3,6 +3,7 @@ import '../../core/constants/app_colors.dart';
 import '../../models/space_model.dart';
 import '../../services/api_service.dart';
 import '../../widgets/app_layout.dart';
+import '../../widgets/app_page_scroll_view.dart';
 import '../../widgets/space_card.dart';
 
 class ExploreSpacesScreen extends StatefulWidget {
@@ -61,12 +62,13 @@ class _ExploreSpacesScreenState extends State<ExploreSpacesScreen> {
       currentRoute: '/user/spaces',
       title: 'Explorar Espacios Universitarios',
       subtitle: 'Consulta de laboratorios y salas en el campus UCEVA',
-      child: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadSpaces,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
+      mobilePageOwnsScroll: true,
+      child: RefreshIndicator(
+        onRefresh: _loadSpaces,
+        child: AppPageScrollView(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : Padding(
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,7 +187,8 @@ class _ExploreSpacesScreenState extends State<ExploreSpacesScreen> {
                   ],
                 ),
               ),
-            ),
+        ),
+      ),
     );
   }
 }

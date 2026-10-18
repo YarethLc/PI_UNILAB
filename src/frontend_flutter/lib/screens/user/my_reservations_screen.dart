@@ -3,6 +3,7 @@ import '../../core/constants/app_colors.dart';
 import '../../models/reservation_model.dart';
 import '../../services/api_service.dart';
 import '../../widgets/app_layout.dart';
+import '../../widgets/app_page_scroll_view.dart';
 import '../../widgets/reservation_card.dart';
 
 class MyReservationsScreen extends StatefulWidget {
@@ -113,12 +114,13 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
       currentRoute: '/user/my-reservations',
       title: 'Mis Reservas',
       subtitle: 'Administra tus solicitudes activas guardadas en la base de datos',
-      child: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadReservations,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
+      mobilePageOwnsScroll: true,
+      child: RefreshIndicator(
+        onRefresh: _loadReservations,
+        child: AppPageScrollView(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : Padding(
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,7 +200,8 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
                   ],
                 ),
               ),
-            ),
+        ),
+      ),
     );
   }
 }

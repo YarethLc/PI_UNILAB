@@ -83,13 +83,26 @@ const crearReserva = async({
 
     const horarioResult = await client.query(
         `
-        SELECT id_horario
-        FROM horario
-        WHERE dia_semana = EXTRACT(ISODOW FROM $1::date)
-         AND $2::time >= hora_apertura
-         AND $3::time <= hora_cierre
+        SELECT h.id_horario
+        FROM horario h
+        WHERE h.dia_semana = EXTRACT(ISODOW FROM $1::date)
+         AND h.activo = TRUE
+         AND $2::time >= h.hora_apertura
+         AND $3::time <= h.hora_cierre
+         AND (
+            h.id_laboratorio = $4
+            OR (
+                h.id_laboratorio IS NULL
+                AND NOT EXISTS (
+                    SELECT 1 FROM horario h2
+                    WHERE h2.dia_semana = EXTRACT(ISODOW FROM $1::date)
+                      AND h2.activo = TRUE
+                      AND h2.id_laboratorio = $4
+                )
+            )
+         )
         `,
-        [fecha, horaInicio, horaFin]
+        [fecha, horaInicio, horaFin, id_laboratorio]
     );
 
     if (horarioResult.rows.length === 0) {
@@ -285,12 +298,25 @@ const editarReserva = async (
             //Verificar el horario de la reserva
 
             const horarioResult = await client.query(
-                `SELECT id_horario
-                FROM horario
-                WHERE dia_semana = EXTRACT(ISODOW FROM $1::date)
-                AND $2::time >= hora_apertura
-                AND $3::time <= hora_cierre
-                `, [fecha, horaInicio, horaFin]
+                `SELECT h.id_horario
+                FROM horario h
+                WHERE h.dia_semana = EXTRACT(ISODOW FROM $1::date)
+                AND h.activo = TRUE
+                AND $2::time >= h.hora_apertura
+                AND $3::time <= h.hora_cierre
+                AND (
+                    h.id_laboratorio = $4
+                    OR (
+                        h.id_laboratorio IS NULL
+                        AND NOT EXISTS (
+                            SELECT 1 FROM horario h2
+                            WHERE h2.dia_semana = EXTRACT(ISODOW FROM $1::date)
+                              AND h2.activo = TRUE
+                              AND h2.id_laboratorio = $4
+                        )
+                    )
+                )
+                `, [fecha, horaInicio, horaFin, id_laboratorio]
             );
 
             if (horarioResult.rows.length === 0) {

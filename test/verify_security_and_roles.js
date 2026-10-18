@@ -53,6 +53,9 @@ async function runTests() {
         const resNoToken = await fetch(`${baseUrl}/api/reservas`);
         assert(resNoToken.status === 401, "GET /api/reservas sin token debe retornar 401 Unauthorized");
 
+        const resNoTokenSchedules = await fetch(`${baseUrl}/api/horarios`);
+        assert(resNoTokenSchedules.status === 401, "GET /api/horarios sin token debe retornar 401 Unauthorized");
+
         // PRUEBA 2: Token malformado retorna 401
         const resBadToken = await fetch(`${baseUrl}/api/reservas`, {
             headers: { Authorization: "Bearer token_invalido_falso" }
@@ -65,6 +68,20 @@ async function runTests() {
             headers: { Authorization: `Bearer ${studentToken}` }
         });
         assert(resStudentUsers.status === 403, "Estudiante (USUARIO) a GET /api/auth/usuarios debe ser BLOQUEADO con 403 Forbidden");
+
+        const resStudentSchedule = await fetch(`${baseUrl}/api/horarios`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${studentToken}`
+            },
+            body: JSON.stringify({
+                dia_semana: 6,
+                hora_apertura: "08:00",
+                hora_cierre: "18:00"
+            })
+        });
+        assert(resStudentSchedule.status === 403, "Estudiante no puede crear franjas horarias");
 
         // PRUEBA 4: Estudiante intentando crear laboratorio (exclusivo admin/lab) -> 403
         const resStudentLab = await fetch(`${baseUrl}/api/laboratorios`, {
@@ -94,6 +111,20 @@ async function runTests() {
             headers: { Authorization: `Bearer ${adminToken}` }
         });
         assert(resAdminUsers.status !== 401 && resAdminUsers.status !== 403, "Administrador supera la barrera de autorización de roles en GET /api/auth/usuarios");
+
+        const resInvalidSchedule = await fetch(`${baseUrl}/api/horarios`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${adminToken}`
+            },
+            body: JSON.stringify({
+                dia_semana: 8,
+                hora_apertura: "08:00",
+                hora_cierre: "18:00"
+            })
+        });
+        assert(resInvalidSchedule.status === 400, "El backend rechaza días inválidos al crear horarios");
 
         // PRUEBA 7: Laboratorio tiene autorización para modificar estado
         const resLabPatch = await fetch(`${baseUrl}/api/reservas/999/estado`, {

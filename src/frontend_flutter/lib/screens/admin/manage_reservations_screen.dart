@@ -3,6 +3,7 @@ import '../../core/constants/app_colors.dart';
 import '../../models/reservation_model.dart';
 import '../../services/api_service.dart';
 import '../../widgets/app_layout.dart';
+import '../../widgets/horizontal_table_scroll.dart';
 import '../../widgets/status_badge.dart';
 
 class ManageReservationsScreen extends StatefulWidget {
@@ -105,13 +106,9 @@ class _ManageReservationsScreenState extends State<ManageReservationsScreen> {
                           ),
                         )
                       else
-                        Scrollbar(
-                          thumbVisibility: true,
-                          trackVisibility: true,
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: DataTable(
+                        HorizontalTableScroll(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: DataTable(
                             headingRowColor: WidgetStateProperty.all(AppColors.frameBg),
                             columns: const [
                               DataColumn(label: Text('ID')),
@@ -154,7 +151,6 @@ class _ManageReservationsScreenState extends State<ManageReservationsScreen> {
                                 ],
                               );
                             }).toList(),
-                          ),
                         ),
                       ),
                     ],

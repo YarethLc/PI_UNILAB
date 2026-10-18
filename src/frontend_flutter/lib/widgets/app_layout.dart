@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../core/constants/app_colors.dart';
 import '../services/auth_session_service.dart';
+import 'app_page_scroll_view.dart';
+import 'custom_footer.dart';
 
 class NavItem {
   final String title;
@@ -18,11 +21,12 @@ class NavItem {
   });
 }
 
-class AppLayout extends StatelessWidget {
+class AppLayout extends StatefulWidget {
   final String currentRoute;
   final String title;
   final String? subtitle;
   final Widget child;
+  final bool mobilePageOwnsScroll;
 
   const AppLayout({
     super.key,
@@ -30,16 +34,30 @@ class AppLayout extends StatelessWidget {
     required this.title,
     this.subtitle,
     required this.child,
+    this.mobilePageOwnsScroll = false,
   });
 
+  @override
+  State<AppLayout> createState() => _AppLayoutState();
+}
+
+class _AppLayoutState extends State<AppLayout> {
   static const List<NavItem> allNavItems = [
-    // --- ESTUDIANTE / EGRESADO / USUARIO ---
+    // --- INICIO COMPARTIDO ---
     NavItem(
       title: 'Inicio',
       icon: Icons.home_outlined,
-      route: '/user/home',
-      allowedRoles: ['USUARIO', 'ESTUDIANTE', 'EGRESADO'],
+      route: '/home',
+      allowedRoles: [
+        'USUARIO',
+        'ESTUDIANTE',
+        'EGRESADO',
+        'ADMINISTRADOR',
+        'LABORATORIO',
+      ],
     ),
+
+    // --- ESTUDIANTE / EGRESADO / USUARIO ---
     NavItem(
       title: 'Espacios',
       icon: Icons.meeting_room_outlined,
@@ -74,13 +92,6 @@ class AppLayout extends StatelessWidget {
     ),
 
     // --- ADMINISTRADOR ---
-    NavItem(
-      title: 'Panel administrativo',
-      icon: Icons.dashboard_outlined,
-      route: '/admin/dashboard',
-      allowedRoles: ['ADMINISTRADOR'],
-      section: 'Administración',
-    ),
     NavItem(
       title: 'Gestionar reservas',
       icon: Icons.assignment_turned_in_outlined,
@@ -119,13 +130,6 @@ class AppLayout extends StatelessWidget {
 
     // --- LABORATORIO ---
     NavItem(
-      title: 'Panel laboratorio',
-      icon: Icons.science_outlined,
-      route: '/lab/dashboard',
-      allowedRoles: ['LABORATORIO'],
-      section: 'Laboratorio',
-    ),
-    NavItem(
       title: 'Reservas asignadas',
       icon: Icons.biotech_outlined,
       route: '/lab/reservations',
@@ -138,7 +142,13 @@ class AppLayout extends StatelessWidget {
       title: 'Perfil',
       icon: Icons.person_outline,
       route: '/user/profile',
-      allowedRoles: ['USUARIO', 'ESTUDIANTE', 'EGRESADO', 'ADMINISTRADOR', 'LABORATORIO'],
+      allowedRoles: [
+        'USUARIO',
+        'ESTUDIANTE',
+        'EGRESADO',
+        'ADMINISTRADOR',
+        'LABORATORIO'
+      ],
       section: 'Cuenta',
     ),
   ];
@@ -152,6 +162,24 @@ class AppLayout extends StatelessWidget {
     return 'Estudiante UCEVA';
   }
 
+  bool _isNavItemAllowed(NavItem item, String role, String type) {
+    final allowed = item.allowedRoles.map((value) => value.toUpperCase());
+
+    if (item.route == '/home' || item.route == '/user/profile') {
+      return true;
+    }
+
+    if (role == 'ADMINISTRADOR' || role == 'LABORATORIO') {
+      return allowed.contains(role);
+    }
+
+    if (role == 'USUARIO') {
+      return allowed.contains(role) || allowed.contains(type);
+    }
+
+    return allowed.contains(role) || allowed.contains(type);
+  }
+
   @override
   Widget build(BuildContext context) {
     final session = AuthSessionService();
@@ -160,14 +188,15 @@ class AppLayout extends StatelessWidget {
     final userTipo = session.currentTipo;
 
     // Filtrar únicamente los ítems permitidos para este usuario
-    final allowedNavItems = allNavItems.where((item) {
-      final allowed = item.allowedRoles.map((r) => r.toUpperCase()).toList();
-      return allowed.contains(userRole) || allowed.contains(userTipo);
-    }).toList();
+    final allowedNavItems = allNavItems
+        .where((item) => _isNavItemAllowed(item, userRole, userTipo))
+        .toList();
 
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 960;
-    final roleDescription = user != null ? _formatUserRole(userRole, userTipo) : 'Sesión activa';
+    final isWebDesktop = kIsWeb && isDesktop;
+    final roleDescription =
+        user != null ? _formatUserRole(userRole, userTipo) : 'Sesión activa';
 
     if (!isDesktop) {
       // Móvil / Tablet
@@ -179,14 +208,19 @@ class AppLayout extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                title,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                widget.title,
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
               Text(
-                subtitle ?? (user != null ? '${user.nombres} · $roleDescription' : roleDescription),
-                style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                widget.subtitle ??
+                    (user != null
+                        ? '${user.nombres} · $roleDescription'
+                        : roleDescription),
+                style:
+                    const TextStyle(fontSize: 11, color: AppColors.textMuted),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -197,14 +231,18 @@ class AppLayout extends StatelessWidget {
               padding: const EdgeInsets.only(right: 12),
               child: Center(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: AppColors.accentGreenSoft,
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     userRole.isNotEmpty ? userRole : 'USUARIO',
-                    style: const TextStyle(color: AppColors.accentGreenText, fontSize: 10, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        color: AppColors.accentGreenText,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -213,9 +251,20 @@ class AppLayout extends StatelessWidget {
         ),
         drawer: Drawer(
           backgroundColor: AppColors.primaryGreen,
-          child: _buildSidebarContent(context, allowedNavItems, user, roleDescription),
+          child: _buildSidebarContent(
+              context, allowedNavItems, user, roleDescription),
         ),
-        body: SafeArea(child: child),
+        body: SafeArea(
+          child: widget.mobilePageOwnsScroll
+              ? widget.child
+              : CustomScrollView(
+                  slivers: [
+                    const SliverToBoxAdapter(child: AppBanner()),
+                    SliverToBoxAdapter(child: widget.child),
+                    const SliverToBoxAdapter(child: CustomFooter()),
+                  ],
+                ),
+        ),
       );
     }
 
@@ -224,9 +273,12 @@ class AppLayout extends StatelessWidget {
       backgroundColor: AppColors.pageBg,
       body: Center(
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 1240),
+          constraints:
+              isWebDesktop ? null : const BoxConstraints(maxWidth: 1240),
           width: double.infinity,
-          margin: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+          margin: isWebDesktop
+              ? EdgeInsets.zero
+              : const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
           decoration: BoxDecoration(
             color: AppColors.frameBg,
             borderRadius: BorderRadius.circular(18),
@@ -247,21 +299,26 @@ class AppLayout extends StatelessWidget {
               Container(
                 width: 240,
                 color: AppColors.primaryGreen,
-                child: _buildSidebarContent(context, allowedNavItems, user, roleDescription),
+                child: _buildSidebarContent(
+                    context, allowedNavItems, user, roleDescription),
               ),
               // Main Content Area
               Expanded(
                 child: Column(
                   children: [
+                    const AppBanner(),
                     // Topbar
-                    _buildDesktopTopbar(user?.fullName ?? 'Usuario', roleDescription, userRole),
+                    _buildDesktopTopbar(
+                        user?.fullName ?? 'Usuario', roleDescription, userRole),
                     // Content
                     Expanded(
                       child: Container(
                         color: AppColors.frameBg,
-                        child: child,
+                        child: widget.child,
                       ),
                     ),
+                    // Pie de página
+                    const CustomFooter(),
                   ],
                 ),
               ),
@@ -272,12 +329,14 @@ class AppLayout extends StatelessWidget {
     );
   }
 
-  Widget _buildDesktopTopbar(String userName, String roleDescription, String roleName) {
+  Widget _buildDesktopTopbar(
+      String userName, String roleDescription, String roleName) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(bottom: BorderSide(color: AppColors.topbarBorder, width: 1)),
+        border:
+            Border(bottom: BorderSide(color: AppColors.topbarBorder, width: 1)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -288,7 +347,7 @@ class AppLayout extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  title,
+                  widget.title,
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
@@ -299,7 +358,7 @@ class AppLayout extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  subtitle ?? '$userName · $roleDescription',
+                  widget.subtitle ?? '$userName · $roleDescription',
                   style: const TextStyle(
                     fontSize: 13,
                     color: AppColors.topbarSubtitle,
@@ -316,7 +375,8 @@ class AppLayout extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.accentGreenSoft,
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: AppColors.accentGreenText.withValues(alpha: 0.2)),
+              border: Border.all(
+                  color: AppColors.accentGreenText.withValues(alpha: 0.2)),
             ),
             child: Text(
               roleName.isNotEmpty ? 'ROL: $roleName' : 'SESIÓN ACTIVA',
@@ -359,14 +419,17 @@ class AppLayout extends StatelessWidget {
                     SizedBox(width: 8),
                     Text(
                       'UCEVA',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 12),
               const Text(
-                'SAICI',
+                'LabAcces',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 16,
@@ -397,7 +460,8 @@ class AppLayout extends StatelessWidget {
                   Builder(builder: (_) {
                     currentHeading = item.section;
                     return Padding(
-                      padding: const EdgeInsets.only(left: 12, top: 16, bottom: 6),
+                      padding:
+                          const EdgeInsets.only(left: 12, top: 16, bottom: 6),
                       child: Text(
                         item.section!.toUpperCase(),
                         style: const TextStyle(
@@ -423,7 +487,8 @@ class AppLayout extends StatelessWidget {
             onTap: () async {
               await AuthSessionService().clearSession();
               if (context.mounted) {
-                Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+                Navigator.pushNamedAndRemoveUntil(
+                    context, '/login', (route) => false);
               }
             },
             borderRadius: BorderRadius.circular(8),
@@ -439,7 +504,10 @@ class AppLayout extends StatelessWidget {
                   SizedBox(width: 10),
                   Text(
                     'Cerrar sesión',
-                    style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -451,7 +519,10 @@ class AppLayout extends StatelessWidget {
   }
 
   Widget _buildNavItem(BuildContext context, NavItem item) {
-    final isActive = currentRoute == item.route;
+    final isActive = item.route == '/home'
+        ? const {'/user/home', '/admin/dashboard', '/lab/dashboard'}
+            .contains(widget.currentRoute)
+        : widget.currentRoute == item.route;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 2),
@@ -459,7 +530,7 @@ class AppLayout extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            if (currentRoute != item.route) {
+            if (widget.currentRoute != item.route) {
               Navigator.pushReplacementNamed(context, item.route);
             }
           },
@@ -475,7 +546,9 @@ class AppLayout extends StatelessWidget {
                 Icon(
                   item.icon,
                   size: 18,
-                  color: isActive ? Colors.white : AppColors.sidebarText.withValues(alpha: 0.8),
+                  color: isActive
+                      ? Colors.white
+                      : AppColors.sidebarText.withValues(alpha: 0.8),
                 ),
                 const SizedBox(width: 12),
                 Expanded(

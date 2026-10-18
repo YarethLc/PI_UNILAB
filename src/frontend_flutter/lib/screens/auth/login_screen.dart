@@ -109,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 20),
                   const Text(
-                    'Iniciar sesión en SAICI',
+                    'Iniciar sesión en LabAcces',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 22,
@@ -211,7 +211,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             height: 20,
                             child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                           )
-                        : const Text('Ingresar a SAICI'),
+                        : const Text('Ingresar a LabAcces'),
                   ),
                   const SizedBox(height: 20),
                   const Divider(color: AppColors.surfaceBorder),

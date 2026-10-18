@@ -30,15 +30,7 @@ class AppRoutes {
     if (!session.isAuthenticated) {
       return '/login';
     }
-
-    final rol = session.currentRole;
-    if (rol == 'ADMINISTRADOR') {
-      return '/admin/dashboard';
-    } else if (rol == 'LABORATORIO') {
-      return '/lab/dashboard';
-    } else {
-      return '/user/home';
-    }
+    return '/home';
   }
 
   static Widget _unauthorizedScreen(BuildContext context, String reason) {
@@ -112,9 +104,28 @@ class AppRoutes {
 
     final rol = session.currentRole;
     final tipo = session.currentTipo;
-    final isEstudiante = rol == 'USUARIO' || tipo == 'ESTUDIANTE' || tipo == 'EGRESADO';
     final isAdmin = rol == 'ADMINISTRADOR';
     final isLab = rol == 'LABORATORIO';
+    final isEstudiante = rol == 'USUARIO' ||
+        (!isAdmin && !isLab && (tipo == 'ESTUDIANTE' || tipo == 'EGRESADO'));
+
+    if (name == '/home') {
+      if (isAdmin) {
+        return MaterialPageRoute(builder: (_) => const AdminDashboardScreen());
+      }
+      if (isLab) {
+        return MaterialPageRoute(builder: (_) => const LabDashboardScreen());
+      }
+      if (isEstudiante) {
+        return MaterialPageRoute(builder: (_) => const UserHomeScreen());
+      }
+      return MaterialPageRoute(
+        builder: (ctx) => _unauthorizedScreen(
+          ctx,
+          'No se pudo determinar el rol autorizado para mostrar el inicio.',
+        ),
+      );
+    }
 
     // Perfil: Accesible por todos los usuarios autenticados
     if (name == '/user/profile') {

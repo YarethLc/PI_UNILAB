@@ -15,7 +15,7 @@ class SaiciApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'SAICI · Reservas UCEVA',
+      title: 'LabAcces · Reservas UCEVA',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       initialRoute: AppRoutes.getInitialRoute(),
