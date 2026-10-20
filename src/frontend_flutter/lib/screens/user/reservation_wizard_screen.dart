@@ -376,6 +376,33 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
             ],
           ),
         ),
+        const SizedBox(height: 20),
+        // Botón de avance visible justo después de elegir el espacio,
+        // para no depender del botón del final de la página.
+        Align(
+          alignment: Alignment.centerRight,
+          child: ElevatedButton.icon(
+            onPressed: _isSubmitting
+                ? null
+                : () {
+                    if (_selectedSpace == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Por favor selecciona un espacio.')),
+                      );
+                      return;
+                    }
+                    setState(() => _currentStep++);
+                  },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.accentGreen,
+              foregroundColor: Colors.white,
+              minimumSize: const Size(140, 44),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            icon: const Icon(Icons.arrow_forward, size: 18),
+            label: const Text('Continuar'),
+          ),
+        ),
       ],
     );
   }
