@@ -1,0 +1,59 @@
+# ==============================================================================
+# Flutter / Dart
+# ==============================================================================
+.dart_tool/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+*.dill
+*.track.dill
+.widget_preview/
+
+# Efímeros de Flutter Desktop / Web
+ephemeral/
+**/ephemeral/
+
+# ==============================================================================
+# Android
+# ==============================================================================
+android/local.properties
+android/key.properties
+android/.gradle/
+android/captures/
+android/gradlew
+android/gradlew.bat
+android/gradle/wrapper/gradle-wrapper.jar
+android/app/debug/
+android/app/profile/
+android/app/release/
+**/*.keystore
+**/*.jks
+
+# ==============================================================================
+# IDEs y sistema operativo
+# ==============================================================================
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==============================================================================
+# Credenciales y archivos locales (NUNCA subir al repositorio)
+# ==============================================================================
+.env
+.env.*
+*.pem
+*.key
+*.p12
+credentials.json
+client_secrets*.json
+token.json
+
+# Archivos de trabajo locales
+*.log
+READMEAPI_local.patch
