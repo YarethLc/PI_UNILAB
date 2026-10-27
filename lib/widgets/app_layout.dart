@@ -87,7 +87,7 @@ class _AppLayoutState extends State<AppLayout> {
       title: 'Registrar asistencia',
       icon: Icons.qr_code_scanner,
       route: '/user/attendance',
-      allowedRoles: ['USUARIO', 'ESTUDIANTE', 'EGRESADO'],
+      allowedRoles: ['ESTUDIANTE'],
       section: 'Actividades',
     ),
 

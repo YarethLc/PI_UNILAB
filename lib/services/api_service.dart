@@ -554,4 +554,112 @@ class ApiService {
       };
     }
   }
+
+  // ==========================================
+  // ASISTENCIA
+  // ==========================================
+
+  static Future<Map<String, dynamic>> registrarEntrada({
+    required int idLaboratorio,
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/asistencia/entrada'),
+            headers: _headers(),
+            body: jsonEncode({
+              'id_laboratorio': idLaboratorio,
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
+
+      final dynamic data = jsonDecode(utf8.decode(response.bodyBytes));
+
+      if (response.statusCode == 201) {
+        return {
+          'success': true,
+          'mensaje': data is Map
+              ? data['mensaje'] ?? 'Entrada registrada correctamente.'
+              : 'Entrada registrada correctamente.',
+        };
+      }
+
+      return {
+        'success': false,
+        'error': data is Map
+            ? data['mensaje'] ??
+                data['error'] ??
+                'No se pudo registrar la entrada.'
+            : 'No se pudo registrar la entrada.',
+      };
+    } catch (e) {
+      debugPrint('Error registrando entrada: $e');
+
+      return {
+        'success': false,
+        'error': 'No se pudo conectar con el servidor.',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> registrarSalida() async {
+    try {
+      final response = await http
+          .put(
+            Uri.parse('$baseUrl/asistencia/salida'),
+            headers: _headers(),
+          )
+          .timeout(const Duration(seconds: 15));
+
+      final dynamic data = jsonDecode(utf8.decode(response.bodyBytes));
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'mensaje': data is Map
+              ? data['mensaje'] ?? 'Salida registrada correctamente.'
+              : 'Salida registrada correctamente.',
+        };
+      }
+
+      return {
+        'success': false,
+        'error': data is Map
+            ? data['mensaje'] ??
+                data['error'] ??
+                'No se pudo registrar la salida.'
+            : 'No se pudo registrar la salida.',
+      };
+    } catch (e) {
+      debugPrint('Error registrando salida: $e');
+
+      return {
+        'success': false,
+        'error': 'No se pudo conectar con el servidor.',
+      };
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> fetchHistorialAsistencia() async {
+    final response = await http
+        .get(
+          Uri.parse('$baseUrl/asistencia/historial'),
+          headers: _headers(),
+        )
+        .timeout(const Duration(seconds: 15));
+
+    if (response.statusCode != 200) {
+      throw Exception(_extractErrorMessage(response));
+    }
+
+    final dynamic data = jsonDecode(utf8.decode(response.bodyBytes));
+
+    if (data is! List) {
+      throw const FormatException(
+        'La respuesta del historial de asistencia no es una lista.',
+      );
+    }
+
+    return data.map((item) => Map<String, dynamic>.from(item as Map)).toList();
+  }
 }

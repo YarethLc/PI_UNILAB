@@ -3,25 +3,8 @@ import '../../core/constants/app_colors.dart';
 import '../../models/space_model.dart';
 import '../../services/api_service.dart';
 import '../../widgets/app_layout.dart';
-import '../../widgets/custom_text_field.dart';
 import '../../widgets/horizontal_table_scroll.dart';
 import '../../widgets/status_badge.dart';
-
-class AttendanceRecord {
-  final String spaceName;
-  final String date;
-  final String time;
-  final String code;
-  final String status;
-
-  AttendanceRecord({
-    required this.spaceName,
-    required this.date,
-    required this.time,
-    required this.code,
-    required this.status,
-  });
-}
 
 class AttendanceScreen extends StatefulWidget {
   const AttendanceScreen({super.key});
@@ -31,77 +14,187 @@ class AttendanceScreen extends StatefulWidget {
 }
 
 class _AttendanceScreenState extends State<AttendanceScreen> {
-  final _codeController = TextEditingController();
   List<SpaceModel> _spaces = [];
+  List<Map<String, dynamic>> _history = [];
+
   String? _selectedSpace;
   bool _isLoadingSpaces = true;
-  final List<AttendanceRecord> _localHistory = [];
+  bool _isLoadingHistory = true;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
     super.initState();
-    _loadSpaces();
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    await Future.wait([
+      _loadSpaces(),
+      _loadHistory(),
+    ]);
   }
 
   Future<void> _loadSpaces() async {
-    final list = await ApiService.fetchLaboratorios();
-    if (!mounted) return;
-    setState(() {
-      _spaces = list;
-      if (_spaces.isNotEmpty) {
-        _selectedSpace = _spaces.first.name;
-      }
-      _isLoadingSpaces = false;
-    });
+    try {
+      final spaces = await ApiService.fetchLaboratorios();
+
+      if (!mounted) return;
+
+      setState(() {
+        _spaces = spaces;
+
+        if (_spaces.isNotEmpty && !_spaces.any((s) => s.id == _selectedSpace)) {
+          _selectedSpace = _spaces.first.id;
+        }
+
+        _isLoadingSpaces = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() => _isLoadingSpaces = false);
+      _showMessage('No se pudieron cargar los laboratorios.');
+    }
   }
 
-  void _registerAttendance() {
-    final code = _codeController.text.trim();
-    if (code.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ingresa el código de confirmación del espacio.'), backgroundColor: AppColors.error),
-      );
+  Future<void> _loadHistory() async {
+    if (mounted) {
+      setState(() => _isLoadingHistory = true);
+    }
+
+    try {
+      final history = await ApiService.fetchHistorialAsistencia();
+
+      if (!mounted) return;
+
+      setState(() {
+        _history = history;
+        _isLoadingHistory = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() => _isLoadingHistory = false);
+      _showMessage('No se pudo cargar el historial: $e');
+    }
+  }
+
+  Future<void> _registerEntry() async {
+    if (_selectedSpace == null) {
+      _showMessage('Selecciona un laboratorio.');
       return;
     }
 
-    final now = DateTime.now();
-    final timeStr = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-    final dateStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final idLaboratorio = int.tryParse(_selectedSpace!);
 
-    setState(() {
-      _localHistory.insert(
-        0,
-        AttendanceRecord(
-          spaceName: _selectedSpace ?? 'Espacio UCEVA',
-          date: dateStr,
-          time: timeStr,
-          code: code.toUpperCase(),
-          status: 'Confirmada',
-        ),
+    if (idLaboratorio == null) {
+      _showMessage('El laboratorio seleccionado no tiene un ID válido.');
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      final result = await ApiService.registrarEntrada(
+        idLaboratorio: idLaboratorio,
       );
-      _codeController.clear();
-    });
 
+      if (!mounted) return;
+
+      if (result['success'] == true) {
+        _showMessage(
+          result['mensaje'] ?? 'Entrada registrada correctamente.',
+          success: true,
+        );
+
+        await _loadHistory();
+      } else {
+        _showMessage(
+          result['error'] ?? 'No se pudo registrar la entrada.',
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
+
+  Future<void> _registerExit() async {
+    setState(() => _isSubmitting = true);
+
+    try {
+      final result = await ApiService.registrarSalida();
+
+      if (!mounted) return;
+
+      if (result['success'] == true) {
+        _showMessage(
+          result['mensaje'] ?? 'Salida registrada correctamente.',
+          success: true,
+        );
+
+        await _loadHistory();
+      } else {
+        _showMessage(
+          result['error'] ?? 'No se pudo registrar la salida.',
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
+
+  void _showMessage(String message, {bool success = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('¡Asistencia registrada con éxito! Presencia confirmada.'),
-        backgroundColor: AppColors.accentGreen,
+      SnackBar(
+        content: Text(message),
+        backgroundColor: success ? AppColors.accentGreen : AppColors.error,
       ),
     );
   }
 
+  String _formatDateTime(dynamic value) {
+    if (value == null || value.toString().isEmpty) {
+      return '—';
+    }
+
+    final text = value.toString();
+
+    // El backend devuelve la hora local de Colombia como texto.
+    if (text.contains('T')) {
+      final parts = text.split('T');
+      final date = parts[0];
+      final time = parts[1].length >= 5 ? parts[1].substring(0, 5) : parts[1];
+
+      return '$date · $time';
+    }
+
+    return text;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final hasOpenAttendance = _history.any((a) {
+      final salida = a['hora_salida'];
+      return salida == null || salida.toString().trim().isEmpty;
+    });
+
     return AppLayout(
       currentRoute: '/user/attendance',
       title: 'Control de Asistencia',
-      subtitle: 'Registra tu llegada al espacio y consulta tu historial',
+      subtitle: 'Registra tu llegada y salida del laboratorio',
       child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 20,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Tarjeta de Registro de Asistencia
             Container(
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -114,77 +207,138 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                 children: [
                   const Row(
                     children: [
-                      Icon(Icons.qr_code_scanner, color: AppColors.accentGreen, size: 28),
+                      Icon(
+                        Icons.qr_code_scanner,
+                        color: AppColors.accentGreen,
+                        size: 28,
+                      ),
                       SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          'Registrar Asistencia en Espacio',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textStrong),
+                          'Control de asistencia',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textStrong,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
                   const Text(
-                    'Ingresa el código proporcionado por el encargado o mostrado en la pantalla del laboratorio.',
-                    style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+                    'Selecciona el laboratorio donde te encuentras y registra tu entrada. '
+                    'Al terminar, registra tu salida.',
+                    style: TextStyle(
+                      color: AppColors.textMuted,
+                      fontSize: 13,
+                    ),
                   ),
                   const SizedBox(height: 20),
                   if (_isLoadingSpaces)
-                    const LinearProgressIndicator(color: AppColors.primaryGreen)
+                    const LinearProgressIndicator(
+                      color: AppColors.primaryGreen,
+                    )
                   else if (_spaces.isEmpty)
-                    const Text('No se encontraron espacios universitarios disponibles.')
+                    const Text(
+                      'No se encontraron laboratorios disponibles.',
+                    )
                   else
                     DropdownButtonFormField<String>(
                       isExpanded: true,
                       initialValue: _selectedSpace,
-                      decoration: const InputDecoration(labelText: 'Espacio en el que estás presente'),
-                      items: _spaces.map((s) => DropdownMenuItem(
-                        value: s.name,
-                        child: Text(s.name, overflow: TextOverflow.ellipsis),
-                      )).toList(),
-                      onChanged: (val) => setState(() => _selectedSpace = val),
+                      decoration: const InputDecoration(
+                        labelText: 'Laboratorio',
+                      ),
+                      items: _spaces.map((space) {
+                        return DropdownMenuItem<String>(
+                          value: space.id,
+                          child: Text(
+                            space.name,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: _isSubmitting
+                          ? null
+                          : (value) {
+                              setState(() => _selectedSpace = value);
+                            },
+                    ),
+                  const SizedBox(height: 20),
+                  if (hasOpenAttendance)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.accentGreen.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        'Tienes una asistencia abierta. Registra tu salida al terminar.',
+                      ),
                     ),
                   const SizedBox(height: 16),
                   LayoutBuilder(
                     builder: (context, constraints) {
-                      final isNarrow = constraints.maxWidth < 560;
-                      if (isNarrow) {
+                      final narrow = constraints.maxWidth < 500;
+
+                      final entryButton = ElevatedButton.icon(
+                        onPressed: _isSubmitting ||
+                                _isLoadingSpaces ||
+                                _spaces.isEmpty ||
+                                hasOpenAttendance
+                            ? null
+                            : _registerEntry,
+                        icon: const Icon(Icons.login),
+                        label: const Text('Registrar entrada'),
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(0, 48),
+                        ),
+                      );
+
+                      final exitButton = OutlinedButton.icon(
+                        onPressed: _isSubmitting || !hasOpenAttendance
+                            ? null
+                            : _registerExit,
+                        icon: const Icon(Icons.logout),
+                        label: const Text('Registrar salida'),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(0, 48),
+                        ),
+                      );
+
+                      if (narrow) {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            CustomTextField(
-                              label: 'Código de Asistencia (Ej. AST-1234)',
-                              controller: _codeController,
-                              hint: 'Ingresa el código del aula...',
-                              prefixIcon: const Icon(Icons.pin),
-                            ),
-                            const SizedBox(height: 14),
-                            ElevatedButton(
-                              onPressed: _registerAttendance,
-                              style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 48)),
-                              child: const Text('Confirmar llegada'),
-                            ),
+                            entryButton,
+                            const SizedBox(height: 12),
+                            exitButton,
+                            if (_isSubmitting) ...[
+                              const SizedBox(height: 12),
+                              const LinearProgressIndicator(),
+                            ],
                           ],
                         );
                       }
+
                       return Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Expanded(
-                            child: CustomTextField(
-                              label: 'Código de Asistencia (Ej. AST-1234)',
-                              controller: _codeController,
-                              hint: 'Ingresa el código del aula...',
-                              prefixIcon: const Icon(Icons.pin),
-                            ),
-                          ),
+                          Expanded(child: entryButton),
                           const SizedBox(width: 12),
-                          ElevatedButton(
-                            onPressed: _registerAttendance,
-                            style: ElevatedButton.styleFrom(minimumSize: const Size(160, 48)),
-                            child: const Text('Confirmar llegada'),
-                          ),
+                          Expanded(child: exitButton),
+                          if (_isSubmitting)
+                            const Padding(
+                              padding: EdgeInsets.only(left: 12),
+                              child: SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            ),
                         ],
                       );
                     },
@@ -193,8 +347,6 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               ),
             ),
             const SizedBox(height: 24),
-
-            // Historial de Asistencia
             Container(
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -206,40 +358,104 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Historial de Asistencias Registradas',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textStrong),
+                    'Historial de asistencias',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textStrong,
+                    ),
                   ),
                   const SizedBox(height: 16),
-                  if (_localHistory.isEmpty)
+                  if (_isLoadingHistory)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(20),
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
+                  else if (_history.isEmpty)
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 16),
                       child: Text(
-                        'Aún no has registrado asistencias en esta sesión.',
+                        'No hay asistencias registradas.',
                         style: TextStyle(color: AppColors.textMuted),
                       ),
                     )
                   else
                     HorizontalTableScroll(
                       child: DataTable(
-                        headingRowColor: WidgetStateProperty.all(AppColors.frameBg),
+                        headingRowColor: WidgetStateProperty.all(
+                          AppColors.frameBg,
+                        ),
                         columns: const [
-                          DataColumn(label: Text('Espacio', style: TextStyle(fontWeight: FontWeight.bold))),
-                          DataColumn(label: Text('Fecha y Hora', style: TextStyle(fontWeight: FontWeight.bold))),
-                          DataColumn(label: Text('Código', style: TextStyle(fontWeight: FontWeight.bold))),
-                          DataColumn(label: Text('Estado', style: TextStyle(fontWeight: FontWeight.bold))),
+                          DataColumn(
+                            label: Text(
+                              'Laboratorio',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Entrada',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Salida',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              'Estado',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
                         ],
-                        rows: _localHistory.map((a) {
+                        rows: _history.map((attendance) {
+                          final exit = attendance['hora_salida'];
+                          final isOpen = exit == null;
+
                           return DataRow(
                             cells: [
-                              DataCell(Text(a.spaceName, style: const TextStyle(fontWeight: FontWeight.w600))),
-                              DataCell(Text('${a.date} · ${a.time}')),
-                              DataCell(Text(a.code, style: const TextStyle(fontFamily: 'monospace'))),
-                              DataCell(StatusBadge(status: a.status)),
+                              DataCell(
+                                Text(
+                                  (attendance['laboratorio'] ??
+                                          attendance['nombre_laboratorio'] ??
+                                          'Laboratorio')
+                                      .toString(),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  _formatDateTime(
+                                    attendance['hora_entrada'],
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Text(_formatDateTime(exit)),
+                              ),
+                              DataCell(
+                                StatusBadge(
+                                  status: isOpen ? 'En curso' : 'Finalizada',
+                                ),
+                              ),
                             ],
                           );
                         }).toList(),
                       ),
                     ),
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: _isLoadingHistory ? null : _loadHistory,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Actualizar historial'),
+                    ),
+                  ),
                 ],
               ),
             ),
