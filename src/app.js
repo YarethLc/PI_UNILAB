@@ -3,6 +3,7 @@ const authRoutes = require("./modules/auth/authRoutes");
 const app = express();
 
 const reservaRoutes = require("./modules/reserva/reservaRoutes");
+const asistenciaRoutes = require("./modules/asistencia/asistenciaRoutes");
 const horarioRoutes = require('./modules/horarios/horarioRoutes');
 
 
@@ -10,8 +11,8 @@ app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/reservas", reservaRoutes);
+app.use("/api/asistencia", asistenciaRoutes);
 app.use('/api/horarios', horarioRoutes);
-
 app.get("/", (req, res) => {
     res.json({
         mensaje: "API de reservas funcionando correctamente"
