@@ -44,23 +44,33 @@ const crearReserva = async (req, res) => {
 
 //Obtener todas las reservas
 
+
 const obtenerReservas = async (req, res) => {
-
     try {
+        const id_usuario = req.usuario.id_usuario;
+        const rol = (req.usuario.rol || '').toUpperCase();
 
-        const reservas = await reservaService.obtenerReservas();
+        let reservas;
+
+        if (rol === 'ADMINISTRADOR') {
+            // El administrador consulta todas las reservas.
+            reservas = await reservaService.obtenerReservas();
+        } else {
+            // Los demás usuarios consultan solo sus reservas.
+            reservas = await reservaService.obtenerReservas(id_usuario);
+        }
 
         return res.status(200).json(reservas);
 
     } catch (error) {
-
-        console.error(error);
+        console.error('Error al obtener reservas:', error);
 
         return res.status(500).json({
             error: error.message
         });
     }
 };
+
 
 //Obtener reserva por ID
 
@@ -79,7 +89,7 @@ const obtenerReservaPorId = async (req, res) => {
         }
 
         res.status(200).json(reserva);
-    
+
     } catch (error) {
 
         console.error(error);
@@ -106,8 +116,8 @@ const editarReserva = async (req, res) => {
         } = req.body;
 
         const id_usuario = req.usuario.id_usuario;
-    
-        if(!id_laboratorio || !fecha || !horaInicio || !horaFin) {
+
+        if (!id_laboratorio || !fecha || !horaInicio || !horaFin) {
             return res.status(400).json({
                 error: 'Todos los campos son obligatorios'
             });
@@ -115,7 +125,7 @@ const editarReserva = async (req, res) => {
 
         const reserva = await reservaService.editarReserva(
             id,
-            id_usuario, 
+            id_usuario,
             id_laboratorio,
             fecha,
             horaInicio,
@@ -142,7 +152,7 @@ const editarReserva = async (req, res) => {
 
 const cancelarReserva = async (req, res) => {
 
-    try {   
+    try {
 
         const { id } = req.params;
 
@@ -152,7 +162,7 @@ const cancelarReserva = async (req, res) => {
             message: 'Reserva cancelada exitosamente',
             reserva
         });
-    
+
     } catch (error) {
 
         console.error(error);
