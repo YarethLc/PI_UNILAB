@@ -3,12 +3,14 @@ const authRoutes = require("./modules/auth/authRoutes");
 const app = express();
 
 const reservaRoutes = require("./modules/reserva/reservaRoutes");
+const asistenciaRoutes = require("./modules/asistencia/asistenciaRoutes");
 
 
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/reservas", reservaRoutes);
+app.use("/api/asistencia", asistenciaRoutes);
 
 app.get("/", (req, res) => {
     res.json({

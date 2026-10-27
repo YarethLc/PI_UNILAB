@@ -42,8 +42,7 @@ const crearReserva = async (req, res) => {
     }
 };
 
-//Obtener todas las reservas
-
+//Obtener reservas por usuario, si es administrador obtiene todas las reservas
 
 const obtenerReservas = async (req, res) => {
     try {
@@ -64,6 +63,7 @@ const obtenerReservas = async (req, res) => {
 
     } catch (error) {
         console.error('Error al obtener reservas:', error);
+
 
         return res.status(500).json({
             error: error.message
