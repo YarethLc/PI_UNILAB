@@ -66,7 +66,8 @@ class ApiService {
   // AUTENTICACIÓN & USUARIOS
   // ==========================================
 
-  static Future<Map<String, dynamic>> login(String email, String password) async {
+  static Future<Map<String, dynamic>> login(
+      String email, String password) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/auth/login'),
@@ -98,7 +99,8 @@ class ApiService {
     } catch (e) {
       return {
         'success': false,
-        'error': 'No se pudo conectar con el servidor ($baseUrl). Verifica que el backend esté iniciado.',
+        'error':
+            'No se pudo conectar con el servidor ($baseUrl). Verifica que el backend esté iniciado.',
       };
     }
   }
@@ -142,7 +144,8 @@ class ApiService {
     } catch (e) {
       return {
         'success': false,
-        'error': 'Error de conexión con el backend. Verifica que el servidor esté activo.',
+        'error':
+            'Error de conexión con el backend. Verifica que el servidor esté activo.',
       };
     }
   }
@@ -151,34 +154,56 @@ class ApiService {
     required String nombres,
     required String apellidos,
     required String telefono,
-    String? email,
+    required String email,
   }) async {
     try {
-      final body = <String, dynamic>{
-        'nombres': nombres.trim(),
-        'apellidos': apellidos.trim(),
-        'telefono': telefono.trim(),
-      };
-      if (email != null && email.trim().isNotEmpty) {
-        body['email'] = email.trim().toLowerCase();
-      }
+      final response = await http
+          .put(
+            Uri.parse('$baseUrl/auth/perfil'),
+            headers: _headers(),
+            body: jsonEncode({
+              'nombres': nombres.trim(),
+              'apellidos': apellidos.trim(),
+              'telefono': telefono.trim(),
+              'email': email.trim().toLowerCase(),
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
 
-      final response = await http.put(
-        Uri.parse('$baseUrl/auth/perfil'),
-        headers: _headers(),
-        body: jsonEncode(body),
-      );
+      final dynamic data = jsonDecode(utf8.decode(response.bodyBytes));
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(utf8.decode(response.bodyBytes));
-        final updated = UserModel.fromJson(data['usuario']);
+      if (response.statusCode == 200 &&
+          data is Map<String, dynamic> &&
+          data['usuario'] is Map<String, dynamic>) {
+        final updated = UserModel.fromJson(
+          data['usuario'] as Map<String, dynamic>,
+        );
+
         await AuthSessionService().updateCurrentUser(updated);
-        return {'success': true, 'usuario': updated};
-      } else {
-        return {'success': false, 'error': _extractErrorMessage(response)};
+
+        return {
+          'success': true,
+          'mensaje': data['mensaje'] ?? 'Perfil actualizado correctamente.',
+          'usuario': updated,
+        };
       }
+
+      return {
+        'success': false,
+        'error': data is Map<String, dynamic>
+            ? data['mensaje'] ??
+                data['error'] ??
+                data['message'] ??
+                'No se pudo actualizar el perfil.'
+            : 'El servidor devolvió una respuesta inválida.',
+      };
     } catch (e) {
-      return {'success': false, 'error': 'Error al actualizar perfil en el servidor.'};
+      debugPrint('Error actualizando perfil: $e');
+
+      return {
+        'success': false,
+        'error': 'No se pudo conectar con el servidor al actualizar el perfil.',
+      };
     }
   }
 
@@ -198,19 +223,27 @@ class ApiService {
         }),
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(utf8.decode(response.bodyBytes));
+      final data = jsonDecode(utf8.decode(response.bodyBytes));
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
         return {
           'success': true,
-          'mensaje': data['mensaje'] ?? 'Contraseña actualizada exitosamente',
-        };
-      } else {
-        return {
-          'success': false,
-          'error': _extractErrorMessage(response),
+          'mensaje': data['mensaje'] ??
+              data['message'] ??
+              'Contraseña actualizada correctamente.',
         };
       }
+
+      return {
+        'success': false,
+        'error': data['mensaje'] ??
+            data['message'] ??
+            data['error'] ??
+            'No fue posible cambiar la contraseña.',
+      };
     } catch (e) {
+      debugPrint('Error al cambiar contraseña: $e');
+
       return {
         'success': false,
         'error': 'Error de conexión al cambiar contraseña.',
@@ -311,9 +344,14 @@ class ApiService {
             name: item['nombre'] ?? '',
             type: 'Laboratorio',
             location: item['ubicacion'] ?? 'Campus UCEVA',
-            capacity: item['capacidad'] is int ? item['capacidad'] : int.tryParse(item['capacidad']?.toString() ?? '20') ?? 20,
+            capacity: item['capacidad'] is int
+                ? item['capacidad']
+                : int.tryParse(item['capacidad']?.toString() ?? '20') ?? 20,
             resources: 'Equipos y conectividad de laboratorio',
-            availability: (item['estado'] ?? '').toString().toUpperCase() == 'DISPONIBLE' ? 'Disponible' : 'Ocupado',
+            availability:
+                (item['estado'] ?? '').toString().toUpperCase() == 'DISPONIBLE'
+                    ? 'Disponible'
+                    : 'Ocupado',
             status: item['estado'] ?? 'Disponible',
             schedule: 'Lunes a viernes, 8:00 a. m. – 6:00 p. m.',
             icon: '💻',
@@ -415,13 +453,19 @@ class ApiService {
         final dynamic raw = jsonDecode(utf8.decode(response.bodyBytes));
         final List<dynamic> data = raw is List ? raw : [raw];
         return data.map((item) {
-          final idRes = item['id_reserva'] is int ? item['id_reserva'] : int.tryParse(item['id_reserva']?.toString() ?? '0') ?? 0;
-          final labNombre = item['laboratorio'] ?? item['nombre'] ?? 'Laboratorio';
-          final solicitante = (item['nombres'] != null && item['apellidos'] != null)
-              ? '${item['nombres']} ${item['apellidos']}'
-              : null;
-          final horaIni = item['hora_inicio']?.toString().substring(0, 5) ?? '08:00';
-          final horaFin = item['hora_fin']?.toString().substring(0, 5) ?? '10:00';
+          final idRes = item['id_reserva'] is int
+              ? item['id_reserva']
+              : int.tryParse(item['id_reserva']?.toString() ?? '0') ?? 0;
+          final labNombre =
+              item['laboratorio'] ?? item['nombre'] ?? 'Laboratorio';
+          final solicitante =
+              (item['nombres'] != null && item['apellidos'] != null)
+                  ? '${item['nombres']} ${item['apellidos']}'
+                  : null;
+          final horaIni =
+              item['hora_inicio']?.toString().substring(0, 5) ?? '08:00';
+          final horaFin =
+              item['hora_fin']?.toString().substring(0, 5) ?? '10:00';
 
           return ReservationModel(
             id: idRes,
@@ -482,11 +526,15 @@ class ApiService {
         return {'success': false, 'error': _extractErrorMessage(response)};
       }
     } catch (e) {
-      return {'success': false, 'error': 'Error de conexión al cancelar reserva.'};
+      return {
+        'success': false,
+        'error': 'Error de conexión al cancelar reserva.'
+      };
     }
   }
 
-  static Future<Map<String, dynamic>> updateEstadoReserva(int idReserva, String nuevoEstado) async {
+  static Future<Map<String, dynamic>> updateEstadoReserva(
+      int idReserva, String nuevoEstado) async {
     try {
       final response = await http.patch(
         Uri.parse('$baseUrl/reservas/$idReserva/estado'),
@@ -500,7 +548,10 @@ class ApiService {
         return {'success': false, 'error': _extractErrorMessage(response)};
       }
     } catch (e) {
-      return {'success': false, 'error': 'Error de conexión al actualizar estado.'};
+      return {
+        'success': false,
+        'error': 'Error de conexión al actualizar estado.'
+      };
     }
   }
 }

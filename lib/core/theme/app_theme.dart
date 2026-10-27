@@ -7,7 +7,7 @@ class AppTheme {
       useMaterial3: true,
       fontFamily: 'Inter',
       scaffoldBackgroundColor: AppColors.pageBg,
-      colorScheme: ColorScheme.light(
+      colorScheme: const ColorScheme.light(
         primary: AppColors.accentGreen,
         onPrimary: Colors.white,
         secondary: AppColors.primaryGreen,
@@ -68,18 +68,22 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.surfaceBorder, width: 1),
+          borderSide:
+              const BorderSide(color: AppColors.surfaceBorder, width: 1),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.surfaceBorder, width: 1),
+          borderSide:
+              const BorderSide(color: AppColors.surfaceBorder, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.accentGreen, width: 1.5),
+          borderSide:
+              const BorderSide(color: AppColors.accentGreen, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),

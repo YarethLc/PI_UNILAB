@@ -14,6 +14,7 @@ class MyReservationsScreen extends StatefulWidget {
   State<MyReservationsScreen> createState() => _MyReservationsScreenState();
 }
 
+// This screen displays the user's reservations and allows filtering, viewing details, and canceling reservations.
 class _MyReservationsScreenState extends State<MyReservationsScreen> {
   List<ReservationModel> _reservas = [];
   bool _isLoading = true;
