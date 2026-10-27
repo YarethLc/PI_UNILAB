@@ -57,10 +57,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final telefono = _telefonoController.text.trim();
     final email = _emailController.text.trim();
 
-    if (nombres.isEmpty || apellidos.isEmpty || telefono.isEmpty || email.isEmpty) {
+    if (nombres.isEmpty ||
+        apellidos.isEmpty ||
+        telefono.isEmpty ||
+        email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Por favor completa todos los campos de información personal.'),
+          content: Text(
+              'Por favor completa todos los campos de información personal.'),
           backgroundColor: AppColors.error,
         ),
       );
@@ -70,7 +74,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (!RegExp(r'^\d{10}$').hasMatch(telefono)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('El teléfono debe tener exactamente 10 dígitos numéricos.'),
+          content:
+              Text('El teléfono debe tener exactamente 10 dígitos numéricos.'),
           backgroundColor: AppColors.error,
         ),
       );
@@ -92,11 +97,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (res['success'] == true) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('¡Datos de perfil actualizados exitosamente en la base de datos!'),
+        SnackBar(
+          content: Text(
+            res['mensaje'] ?? 'Perfil actualizado correctamente.',
+          ),
           backgroundColor: AppColors.accentGreen,
         ),
       );
+
       setState(() {});
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -116,7 +124,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (currentPass.isEmpty || newPass.isEmpty || confirmPass.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Por favor completa los tres campos de contraseña.'),
+          content: Text(
+            'Por favor completa los tres campos de contraseña.',
+          ),
           backgroundColor: AppColors.error,
         ),
       );
@@ -126,7 +136,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (newPass.length < 8) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('La nueva contraseña debe tener al menos 8 caracteres.'),
+          content: Text(
+            'La nueva contraseña debe tener al menos 8 caracteres.',
+          ),
           backgroundColor: AppColors.error,
         ),
       );
@@ -136,7 +148,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (newPass != confirmPass) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('La nueva contraseña y su confirmación no coinciden.'),
+          content: Text(
+            'La nueva contraseña y su confirmación no coinciden.',
+          ),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    if (newPass == currentPass) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'La nueva contraseña debe ser diferente a la actual.',
+          ),
           backgroundColor: AppColors.error,
         ),
       );
@@ -145,31 +171,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     setState(() => _isChangingPassword = true);
 
-    final res = await ApiService.changePassword(
-      contrasenaActual: currentPass,
-      nuevaContrasena: newPass,
-      confirmarContrasena: confirmPass,
-    );
+    try {
+      final res = await ApiService.changePassword(
+        contrasenaActual: currentPass,
+        nuevaContrasena: newPass,
+        confirmarContrasena: confirmPass,
+      );
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    setState(() => _isChangingPassword = false);
+      setState(() => _isChangingPassword = false);
 
-    if (res['success'] == true) {
-      _currentPassController.clear();
-      _newPassController.clear();
-      _confirmPassController.clear();
+      if (res['success'] == true) {
+        _currentPassController.clear();
+        _newPassController.clear();
+        _confirmPassController.clear();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              res['mensaje']?.toString() ??
+                  '¡Contraseña actualizada exitosamente!',
+            ),
+            backgroundColor: AppColors.accentGreen,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              res['error']?.toString() ??
+                  'No fue posible cambiar la contraseña.',
+            ),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() => _isChangingPassword = false);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('¡Contraseña actualizada exitosamente!'),
-          backgroundColor: AppColors.accentGreen,
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(res['error'] ?? 'Error al cambiar la contraseña.'),
+          content: Text(
+            'Ocurrió un error al cambiar la contraseña.',
+          ),
           backgroundColor: AppColors.error,
         ),
       );
@@ -205,8 +252,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         radius: 32,
                         backgroundColor: AppColors.accentGreenSoft,
                         child: Text(
-                          (user?.nombres.isNotEmpty ?? false) ? user!.nombres.substring(0, 1).toUpperCase() : 'U',
-                          style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: AppColors.accentGreenText),
+                          (user?.nombres.isNotEmpty ?? false)
+                              ? user!.nombres.substring(0, 1).toUpperCase()
+                              : 'U',
+                          style: const TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.accentGreenText),
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -216,21 +268,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           children: [
                             Text(
                               user?.fullName ?? 'Usuario',
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textStrong),
+                              style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.textStrong),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 4),
                             Text(
                               '${user?.tipo ?? ''} · Rol: ${user?.rol.toUpperCase() ?? ''}',
-                              style: const TextStyle(fontSize: 13, color: AppColors.accentGreenText, fontWeight: FontWeight.w600),
+                              style: const TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.accentGreenText,
+                                  fontWeight: FontWeight.w600),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 2),
                             Text(
                               user?.correo ?? '',
-                              style: const TextStyle(fontSize: 13, color: AppColors.textMuted),
+                              style: const TextStyle(
+                                  fontSize: 13, color: AppColors.textMuted),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -240,8 +299,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                   const Divider(color: AppColors.surfaceBorder, height: 36),
-
-                  const Text('Información Personal', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const Text('Información Personal',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   const SizedBox(height: 16),
                   LayoutBuilder(
                     builder: (context, constraints) {
@@ -303,7 +363,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     builder: (context, constraints) {
                       final isNarrow = constraints.maxWidth < 480;
                       return Align(
-                        alignment: isNarrow ? Alignment.center : Alignment.centerRight,
+                        alignment:
+                            isNarrow ? Alignment.center : Alignment.centerRight,
                         child: SizedBox(
                           width: isNarrow ? double.infinity : null,
                           child: ElevatedButton.icon(
@@ -312,10 +373,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ? const SizedBox(
                                     width: 16,
                                     height: 16,
-                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                    child: CircularProgressIndicator(
+                                        color: Colors.white, strokeWidth: 2),
                                   )
                                 : const Icon(Icons.save_outlined, size: 18),
-                            label: Text(_isSavingProfile ? 'Guardando...' : 'Guardar datos personales'),
+                            label: Text(_isSavingProfile
+                                ? 'Guardando...'
+                                : 'Guardar datos personales'),
                             style: ElevatedButton.styleFrom(
                               minimumSize: const Size(200, 44),
                               backgroundColor: AppColors.primaryGreen,
@@ -345,12 +409,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   const Row(
                     children: [
-                      Icon(Icons.lock_outline, color: AppColors.primaryGreen, size: 22),
+                      Icon(Icons.lock_outline,
+                          color: AppColors.primaryGreen, size: 22),
                       SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'Seguridad y Cambio de Contraseña',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textStrong),
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: AppColors.textStrong),
                         ),
                       ),
                     ],
@@ -361,15 +429,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: TextStyle(color: AppColors.textMuted, fontSize: 13),
                   ),
                   const Divider(color: AppColors.surfaceBorder, height: 28),
-
                   CustomTextField(
                     label: 'Contraseña Actual',
                     controller: _currentPassController,
                     obscureText: _obscureCurrent,
                     enabled: !_isChangingPassword,
                     suffixIcon: IconButton(
-                      icon: Icon(_obscureCurrent ? Icons.visibility_off : Icons.visibility, size: 20),
-                      onPressed: () => setState(() => _obscureCurrent = !_obscureCurrent),
+                      icon: Icon(
+                          _obscureCurrent
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          size: 20),
+                      onPressed: () =>
+                          setState(() => _obscureCurrent = !_obscureCurrent),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -385,8 +457,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               obscureText: _obscureNew,
                               enabled: !_isChangingPassword,
                               suffixIcon: IconButton(
-                                icon: Icon(_obscureNew ? Icons.visibility_off : Icons.visibility, size: 20),
-                                onPressed: () => setState(() => _obscureNew = !_obscureNew),
+                                icon: Icon(
+                                    _obscureNew
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                    size: 20),
+                                onPressed: () =>
+                                    setState(() => _obscureNew = !_obscureNew),
                               ),
                             ),
                             const SizedBox(height: 16),
@@ -396,8 +473,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               obscureText: _obscureConfirm,
                               enabled: !_isChangingPassword,
                               suffixIcon: IconButton(
-                                icon: Icon(_obscureConfirm ? Icons.visibility_off : Icons.visibility, size: 20),
-                                onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                                icon: Icon(
+                                    _obscureConfirm
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                    size: 20),
+                                onPressed: () => setState(
+                                    () => _obscureConfirm = !_obscureConfirm),
                               ),
                             ),
                           ],
@@ -412,8 +494,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               obscureText: _obscureNew,
                               enabled: !_isChangingPassword,
                               suffixIcon: IconButton(
-                                icon: Icon(_obscureNew ? Icons.visibility_off : Icons.visibility, size: 20),
-                                onPressed: () => setState(() => _obscureNew = !_obscureNew),
+                                icon: Icon(
+                                    _obscureNew
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                    size: 20),
+                                onPressed: () =>
+                                    setState(() => _obscureNew = !_obscureNew),
                               ),
                             ),
                           ),
@@ -425,8 +512,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               obscureText: _obscureConfirm,
                               enabled: !_isChangingPassword,
                               suffixIcon: IconButton(
-                                icon: Icon(_obscureConfirm ? Icons.visibility_off : Icons.visibility, size: 20),
-                                onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                                icon: Icon(
+                                    _obscureConfirm
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                    size: 20),
+                                onPressed: () => setState(
+                                    () => _obscureConfirm = !_obscureConfirm),
                               ),
                             ),
                           ),
@@ -439,19 +531,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     builder: (context, constraints) {
                       final isNarrow = constraints.maxWidth < 480;
                       return Align(
-                        alignment: isNarrow ? Alignment.center : Alignment.centerRight,
+                        alignment:
+                            isNarrow ? Alignment.center : Alignment.centerRight,
                         child: SizedBox(
                           width: isNarrow ? double.infinity : null,
                           child: ElevatedButton.icon(
-                            onPressed: _isChangingPassword ? null : _changePassword,
+                            onPressed:
+                                _isChangingPassword ? null : _changePassword,
                             icon: _isChangingPassword
                                 ? const SizedBox(
                                     width: 16,
                                     height: 16,
-                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                    child: CircularProgressIndicator(
+                                        color: Colors.white, strokeWidth: 2),
                                   )
                                 : const Icon(Icons.key_outlined, size: 18),
-                            label: Text(_isChangingPassword ? 'Actualizando...' : 'Actualizar contraseña'),
+                            label: Text(_isChangingPassword
+                                ? 'Actualizando...'
+                                : 'Actualizar contraseña'),
                             style: ElevatedButton.styleFrom(
                               minimumSize: const Size(200, 44),
                               backgroundColor: AppColors.primaryGreen,
