@@ -268,24 +268,32 @@ class ApiService {
     }
   }
 
+  // ==========================================
+  // HORARIOS INSTITUCIONALES
+  // ==========================================
+
   static Future<List<ScheduleModel>> fetchSchedules({int? labId}) async {
-    final uri = labId != null
-        ? Uri.parse('$baseUrl/horarios?id_laboratorio=$labId')
-        : Uri.parse('$baseUrl/horarios');
     final response = await http.get(
-      uri,
+      Uri.parse('$baseUrl/horarios'),
       headers: _headers(),
     );
+
     if (response.statusCode != 200) {
       throw Exception(_extractErrorMessage(response));
     }
 
     final data = jsonDecode(utf8.decode(response.bodyBytes));
+
     if (data is! List) {
-      throw const FormatException('La respuesta de horarios no es una lista.');
+      throw const FormatException(
+        'La respuesta de horarios no es una lista.',
+      );
     }
+
     return data
-        .map((item) => ScheduleModel.fromJson(item as Map<String, dynamic>))
+        .map((item) => ScheduleModel.fromJson(
+              Map<String, dynamic>.from(item as Map),
+            ))
         .toList();
   }
 
@@ -295,6 +303,8 @@ class ApiService {
     required String closesAt,
     int? labId,
   }) async {
+    _validateScheduleTimes(weekday, opensAt, closesAt);
+
     final response = await http.post(
       Uri.parse('$baseUrl/horarios'),
       headers: _headers(),
@@ -302,25 +312,72 @@ class ApiService {
         'dia_semana': weekday,
         'hora_apertura': opensAt,
         'hora_cierre': closesAt,
-        if (labId != null) 'id_laboratorio': labId,
       }),
     );
+
     if (response.statusCode != 201) {
       throw Exception(_extractErrorMessage(response));
     }
 
     final data = jsonDecode(utf8.decode(response.bodyBytes));
-    return ScheduleModel.fromJson(data['horario'] as Map<String, dynamic>);
+
+    return ScheduleModel.fromJson(
+      Map<String, dynamic>.from(data['horario'] as Map),
+    );
   }
 
-  static Future<void> setScheduleActive(int id, bool active) async {
-    final response = await http.patch(
-      Uri.parse('$baseUrl/horarios/$id/estado'),
+  static Future<ScheduleModel> updateSchedule({
+    required int id,
+    required int weekday,
+    required String opensAt,
+    required String closesAt,
+  }) async {
+    _validateScheduleTimes(weekday, opensAt, closesAt);
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/horarios/$id'),
       headers: _headers(),
-      body: jsonEncode({'activo': active}),
+      body: jsonEncode({
+        'dia_semana': weekday,
+        'hora_apertura': opensAt,
+        'hora_cierre': closesAt,
+      }),
     );
+
     if (response.statusCode != 200) {
       throw Exception(_extractErrorMessage(response));
+    }
+
+    final data = jsonDecode(utf8.decode(response.bodyBytes));
+    final horario = Map<String, dynamic>.from(data['horario'] as Map);
+
+    return ScheduleModel.fromJson(horario);
+  }
+
+  static Future<void> deleteSchedule(int id) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/horarios/$id'),
+      headers: _headers(),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception(_extractErrorMessage(response));
+    }
+  }
+
+  static void _validateScheduleTimes(
+    int weekday,
+    String opensAt,
+    String closesAt,
+  ) {
+    if (weekday < 1 || weekday > 7) {
+      throw ArgumentError('El día debe estar entre 1 y 7.');
+    }
+
+    if (opensAt.compareTo(closesAt) >= 0) {
+      throw ArgumentError(
+        'La hora de cierre debe ser posterior a la apertura.',
+      );
     }
   }
 
