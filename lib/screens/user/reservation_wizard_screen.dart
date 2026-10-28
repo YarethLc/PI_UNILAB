@@ -11,7 +11,8 @@ class ReservationWizardScreen extends StatefulWidget {
   const ReservationWizardScreen({super.key, this.initialSpace});
 
   @override
-  State<ReservationWizardScreen> createState() => _ReservationWizardScreenState();
+  State<ReservationWizardScreen> createState() =>
+      _ReservationWizardScreenState();
 }
 
 class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
@@ -90,19 +91,23 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
         context: context,
         barrierDismissible: false,
         builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: const Row(
             children: [
               Icon(Icons.check_circle, color: AppColors.accentGreen, size: 28),
               SizedBox(width: 10),
-              Text('¡Reserva Guardada en BD!', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text('¡Reserva Guardada en BD!',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ],
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Tu solicitud para «${_selectedSpace!.name}» fue procesada por el servidor.', style: const TextStyle(fontSize: 14)),
+              Text(
+                  'Tu solicitud para «${_selectedSpace!.name}» fue procesada por el servidor.',
+                  style: const TextStyle(fontSize: 14)),
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(12),
@@ -113,10 +118,16 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('📅 Fecha: $dateStr', style: const TextStyle(fontWeight: FontWeight.w600)),
-                    Text('⏰ Horario: $_selectedSlot', style: const TextStyle(fontWeight: FontWeight.w600)),
-                    Text('🎯 Motivo: $_selectedPurpose', style: const TextStyle(fontWeight: FontWeight.w600)),
-                    const Text('📌 Estado inicial: PENDIENTE', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.amberText)),
+                    Text('📅 Fecha: $dateStr',
+                        style: const TextStyle(fontWeight: FontWeight.w600)),
+                    Text('⏰ Horario: $_selectedSlot',
+                        style: const TextStyle(fontWeight: FontWeight.w600)),
+                    Text('🎯 Motivo: $_selectedPurpose',
+                        style: const TextStyle(fontWeight: FontWeight.w600)),
+                    const Text('📌 Estado actual: CONFIRMADA',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.amberText)),
                   ],
                 ),
               ),
@@ -126,7 +137,8 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(ctx);
-                Navigator.pushReplacementNamed(context, '/user/my-reservations');
+                Navigator.pushReplacementNamed(
+                    context, '/user/my-reservations');
               },
               child: const Text('Ir a Mis Reservas'),
             ),
@@ -137,15 +149,18 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: const Row(
             children: [
               Icon(Icons.error_outline, color: AppColors.error, size: 28),
               SizedBox(width: 10),
-              Text('No se pudo crear la reserva', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text('No se pudo crear la reserva',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ],
           ),
-          content: Text(result['error'] ?? 'Ocurrió un error al procesar la reserva.'),
+          content: Text(
+              result['error'] ?? 'Ocurrió un error al procesar la reserva.'),
           actions: [
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx),
@@ -188,18 +203,27 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Expanded(
                                     child: Text(
                                       'Paso ${_currentStep + 1} de 4: ${_getStepTitle(_currentStep)}',
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.primaryGreen),
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13,
+                                          color: AppColors.primaryGreen),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                   const SizedBox(width: 8),
-                                  Text('${((_currentStep + 1) / 4 * 100).toInt()}%', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textMuted)),
+                                  Text(
+                                      '${((_currentStep + 1) / 4 * 100).toInt()}%',
+                                      style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.textMuted)),
                                 ],
                               ),
                               const SizedBox(height: 8),
@@ -232,7 +256,9 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
                     if (_currentStep == 0) _buildSpaceStep(),
                     if (_currentStep == 1) _buildDateStep(),
                     if (_currentStep == 2) _buildSlotStep(),
-                    if (_currentStep == 3) _buildSummaryStep(user?.fullName ?? '', user?.correo ?? ''),
+                    if (_currentStep == 3)
+                      _buildSummaryStep(
+                          user?.fullName ?? '', user?.correo ?? ''),
 
                     const SizedBox(height: 32),
                     // Botones de navegación adaptables
@@ -244,8 +270,11 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
                       children: [
                         if (_currentStep > 0)
                           OutlinedButton(
-                            onPressed: _isSubmitting ? null : () => setState(() => _currentStep--),
-                            style: OutlinedButton.styleFrom(minimumSize: const Size(110, 42)),
+                            onPressed: _isSubmitting
+                                ? null
+                                : () => setState(() => _currentStep--),
+                            style: OutlinedButton.styleFrom(
+                                minimumSize: const Size(110, 42)),
                             child: const Text('Anterior'),
                           )
                         else
@@ -255,9 +284,13 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
                               ? null
                               : () {
                                   if (_currentStep < 3) {
-                                    if (_selectedSpace == null && _currentStep == 0) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Por favor selecciona un espacio.')),
+                                    if (_selectedSpace == null &&
+                                        _currentStep == 0) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                            content: Text(
+                                                'Por favor selecciona un espacio.')),
                                       );
                                       return;
                                     }
@@ -266,14 +299,18 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
                                     _finishReservation();
                                   }
                                 },
-                          style: ElevatedButton.styleFrom(minimumSize: const Size(160, 44)),
+                          style: ElevatedButton.styleFrom(
+                              minimumSize: const Size(160, 44)),
                           child: _isSubmitting
                               ? const SizedBox(
                                   width: 20,
                                   height: 20,
-                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                      color: Colors.white, strokeWidth: 2),
                                 )
-                              : Text(_currentStep == 3 ? 'Confirmar reserva' : 'Siguiente paso'),
+                              : Text(_currentStep == 3
+                                  ? 'Confirmar reserva'
+                                  : 'Siguiente paso'),
                         ),
                       ],
                     ),
@@ -308,7 +345,9 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
         children: [
           CircleAvatar(
             radius: 14,
-            backgroundColor: isDone || isCurrent ? AppColors.accentGreen : AppColors.surfaceBorder,
+            backgroundColor: isDone || isCurrent
+                ? AppColors.accentGreen
+                : AppColors.surfaceBorder,
             child: isDone
                 ? const Icon(Icons.check, size: 14, color: Colors.white)
                 : Text(
@@ -326,7 +365,8 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
             style: TextStyle(
               fontSize: 11,
               fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
-              color: isCurrent ? AppColors.accentGreenText : AppColors.textMuted,
+              color:
+                  isCurrent ? AppColors.accentGreenText : AppColors.textMuted,
             ),
           ),
         ],
@@ -359,7 +399,8 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Elige el espacio que deseas utilizar:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        const Text('Elige el espacio que deseas utilizar:',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         const SizedBox(height: 16),
         RadioGroup<SpaceModel>(
           groupValue: _selectedSpace,
@@ -369,9 +410,12 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
               for (final sp in _spaces)
                 RadioListTile<SpaceModel>(
                   value: sp,
-                  title: Text(sp.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                  subtitle: Text('${sp.type} · ${sp.location} · Capacidad: ${sp.capacity} personas'),
-                  secondary: Text(sp.icon, style: const TextStyle(fontSize: 22)),
+                  title: Text(sp.name,
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle: Text(
+                      '${sp.type} · ${sp.location} · Capacidad: ${sp.capacity} personas'),
+                  secondary:
+                      Text(sp.icon, style: const TextStyle(fontSize: 22)),
                 ),
             ],
           ),
@@ -387,7 +431,8 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
                 : () {
                     if (_selectedSpace == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Por favor selecciona un espacio.')),
+                        const SnackBar(
+                            content: Text('Por favor selecciona un espacio.')),
                       );
                       return;
                     }
@@ -397,7 +442,8 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
               backgroundColor: AppColors.accentGreen,
               foregroundColor: Colors.white,
               minimumSize: const Size(140, 44),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
             ),
             icon: const Icon(Icons.arrow_forward, size: 18),
             label: const Text('Continuar'),
@@ -412,7 +458,8 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Selecciona la fecha para la reserva:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        const Text('Selecciona la fecha para la reserva:',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(16),
@@ -422,15 +469,21 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
           ),
           child: Row(
             children: [
-              const Icon(Icons.calendar_month, color: AppColors.accentGreen, size: 32),
+              const Icon(Icons.calendar_month,
+                  color: AppColors.accentGreen, size: 32),
               const SizedBox(width: 16),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Fecha elegida:', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                  const Text('Fecha elegida:',
+                      style:
+                          TextStyle(color: AppColors.textMuted, fontSize: 12)),
                   Text(
                     '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textStrong),
+                    style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textStrong),
                   ),
                 ],
               ),
@@ -445,7 +498,8 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
                   );
                   if (picked != null) setState(() => _selectedDate = picked);
                 },
-                style: ElevatedButton.styleFrom(minimumSize: const Size(140, 40)),
+                style:
+                    ElevatedButton.styleFrom(minimumSize: const Size(140, 40)),
                 child: const Text('Cambiar fecha'),
               ),
             ],
@@ -460,7 +514,8 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Selecciona la franja horaria:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        const Text('Selecciona la franja horaria:',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         const SizedBox(height: 12),
         Wrap(
           spacing: 12,
@@ -481,12 +536,15 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
           }).toList(),
         ),
         const SizedBox(height: 24),
-        const Text('Motivo o justificación de la reserva:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        const Text('Motivo o justificación de la reserva:',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         const SizedBox(height: 12),
         DropdownButtonFormField<String>(
           initialValue: _selectedPurpose,
           decoration: const InputDecoration(labelText: 'Tipo de motivo'),
-          items: purposes.map((p) => DropdownMenuItem(value: p, child: Text(p))).toList(),
+          items: purposes
+              .map((p) => DropdownMenuItem(value: p, child: Text(p)))
+              .toList(),
           onChanged: (val) => setState(() => _selectedPurpose = val!),
         ),
       ],
@@ -498,9 +556,12 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Revisión final de la reserva:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        const Text('Revisión final de la reserva:',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         const SizedBox(height: 8),
-        const Text('Verifica los datos antes de enviar tu solicitud al servidor.', style: TextStyle(color: AppColors.textMuted)),
+        const Text(
+            'Verifica los datos antes de enviar tu solicitud al servidor.',
+            style: TextStyle(color: AppColors.textMuted)),
         const SizedBox(height: 20),
         Container(
           padding: const EdgeInsets.all(20),
@@ -513,7 +574,8 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
             children: [
               _buildSummaryRow('Espacio', _selectedSpace?.name ?? ''),
               _buildSummaryRow('Ubicación', _selectedSpace?.location ?? ''),
-              _buildSummaryRow('Fecha', '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}'),
+              _buildSummaryRow('Fecha',
+                  '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}'),
               _buildSummaryRow('Horario', _selectedSlot),
               _buildSummaryRow('Motivo', _selectedPurpose),
               _buildSummaryRow('Solicitante', userName),
@@ -531,8 +593,13 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textStrong, fontSize: 13)),
+          Text(label,
+              style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
+          Text(value,
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textStrong,
+                  fontSize: 13)),
         ],
       ),
     );

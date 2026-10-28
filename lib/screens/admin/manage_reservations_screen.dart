@@ -10,7 +10,8 @@ class ManageReservationsScreen extends StatefulWidget {
   const ManageReservationsScreen({super.key});
 
   @override
-  State<ManageReservationsScreen> createState() => _ManageReservationsScreenState();
+  State<ManageReservationsScreen> createState() =>
+      _ManageReservationsScreenState();
 }
 
 class _ManageReservationsScreenState extends State<ManageReservationsScreen> {
@@ -63,7 +64,8 @@ class _ManageReservationsScreenState extends State<ManageReservationsScreen> {
     return AppLayout(
       currentRoute: '/admin/reservations',
       title: 'Gestionar Reservas',
-      subtitle: 'Aprobación, rechazo y seguimiento de solicitudes universitarias en BD',
+      subtitle:
+          'Aprobación, rechazo y seguimiento de solicitudes universitarias en BD',
       child: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -87,13 +89,22 @@ class _ManageReservationsScreenState extends State<ManageReservationsScreen> {
                         spacing: 12,
                         runSpacing: 8,
                         children: [
-                          const Text('Listado de Reservas en Base de Datos', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          const Text('Listado de Reservas en Base de Datos',
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold)),
                           DropdownButton<String>(
                             value: _selectedFilter,
-                            items: ['Todas', 'Pendiente', 'Confirmada', 'Cancelada']
-                                .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                            items: [
+                              'Todas',
+                              'Pendiente',
+                              'Confirmada',
+                              'Cancelada'
+                            ]
+                                .map((s) =>
+                                    DropdownMenuItem(value: s, child: Text(s)))
                                 .toList(),
-                            onChanged: (val) => setState(() => _selectedFilter = val!),
+                            onChanged: (val) =>
+                                setState(() => _selectedFilter = val!),
                           ),
                         ],
                       ),
@@ -102,14 +113,17 @@ class _ManageReservationsScreenState extends State<ManageReservationsScreen> {
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 32),
                           child: Center(
-                            child: Text('No hay reservas registradas en esta categoría.', style: TextStyle(color: AppColors.textMuted)),
+                            child: Text(
+                                'No hay reservas registradas en esta categoría.',
+                                style: TextStyle(color: AppColors.textMuted)),
                           ),
                         )
                       else
                         HorizontalTableScroll(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: DataTable(
-                            headingRowColor: WidgetStateProperty.all(AppColors.frameBg),
+                            headingRowColor:
+                                WidgetStateProperty.all(AppColors.frameBg),
                             columns: const [
                               DataColumn(label: Text('ID')),
                               DataColumn(label: Text('Espacio')),
@@ -117,42 +131,26 @@ class _ManageReservationsScreenState extends State<ManageReservationsScreen> {
                               DataColumn(label: Text('Solicitante')),
                               DataColumn(label: Text('Motivo')),
                               DataColumn(label: Text('Estado')),
-                              DataColumn(label: Text('Acciones')),
                             ],
                             rows: list.map((r) {
-                              final isPending = r.status.toUpperCase() == 'PENDIENTE';
+                              final isPending =
+                                  r.status.toUpperCase() == 'PENDIENTE';
                               return DataRow(
                                 cells: [
                                   DataCell(Text('#${r.id}')),
-                                  DataCell(Text(r.spaceName, style: const TextStyle(fontWeight: FontWeight.w600))),
-                                  DataCell(Text('${r.date}\n${r.startTime} – ${r.endTime}')),
+                                  DataCell(Text(r.spaceName,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w600))),
+                                  DataCell(Text(
+                                      '${r.date}\n${r.startTime} – ${r.endTime}')),
                                   DataCell(Text(r.userName ?? 'Estudiante')),
                                   DataCell(Text(r.purpose ?? 'Académico')),
                                   DataCell(StatusBadge(status: r.status)),
-                                  DataCell(
-                                    Row(
-                                      children: [
-                                        if (isPending) ...[
-                                          IconButton(
-                                            icon: const Icon(Icons.check_circle_outline, color: AppColors.accentGreen),
-                                            tooltip: 'Aprobar reserva',
-                                            onPressed: () => _updateStatus(r.id, 'CONFIRMADA'),
-                                          ),
-                                          IconButton(
-                                            icon: const Icon(Icons.cancel_outlined, color: AppColors.error),
-                                            tooltip: 'Rechazar reserva',
-                                            onPressed: () => _updateStatus(r.id, 'CANCELADA'),
-                                          ),
-                                        ] else
-                                          const Text('—', style: TextStyle(color: AppColors.textMuted)),
-                                      ],
-                                    ),
-                                  ),
                                 ],
                               );
                             }).toList(),
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
