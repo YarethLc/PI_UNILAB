@@ -721,6 +721,40 @@ const cambiarPassword = async (req, res) => {
     }
 };
 
+//Listar los usuarios registrados (solo para administradores)
+
+const listarUsuarios = async (req, res) => {
+    try {
+        // Solo el administrador puede consultar todos los usuarios.
+        if ((req.usuario.rol || '').toUpperCase() !== 'ADMINISTRADOR') {
+            return res.status(403).json({
+                mensaje: 'No tienes permisos para consultar los usuarios.'
+            });
+        }
+
+        const resultado = await pool.query(`
+            SELECT
+                id_usuario,
+                nombres,
+                apellidos,
+                email,
+                telefono,
+                tipo_usuario,
+                rol
+            FROM usuario
+            ORDER BY id_usuario ASC
+        `);
+
+        return res.status(200).json(resultado.rows);
+
+    } catch (error) {
+        console.error('Error al listar usuarios:', error);
+
+        return res.status(500).json({
+            mensaje: 'Error al consultar los usuarios registrados.'
+        });
+    }
+};
 
 module.exports = {
     registrarUsuario,
@@ -729,5 +763,6 @@ module.exports = {
     verificarCodigo,
     nuevaPassword,
     actualizarPerfil,
-    cambiarPassword
+    cambiarPassword,
+    listarUsuarios
 };

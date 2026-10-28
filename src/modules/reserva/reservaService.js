@@ -150,7 +150,7 @@ const crearReserva = async ({
          hora_fin, 
          estado
         )
-        VALUES ($1, $2, $3, $4, $5, 'PENDIENTE')
+        VALUES ($1, $2, $3, $4, $5, 'CONFIRMADA')
         RETURNING *
         `,
             [id_usuario, id_laboratorio, fecha, horaInicio, horaFin]
