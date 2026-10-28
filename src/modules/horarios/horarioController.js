@@ -1,5 +1,25 @@
 const pool = require("../../config/db");
 
+// Validar que no existan horarios superpuestos en el mismo día
+const existeCruceHorario = async (
+    dia,
+    hora_apertura,
+    hora_cierre,
+    idExcluir = null
+) => {
+    const resultado = await pool.query(
+        `SELECT id_horario
+         FROM horario
+         WHERE dia_semana = $1
+           AND hora_apertura < $3
+           AND hora_cierre > $2
+           AND ($4::integer IS NULL OR id_horario <> $4)
+         LIMIT 1`,
+        [dia, hora_apertura, hora_cierre, idExcluir]
+    );
+
+    return resultado.rows.length > 0;
+};
 // Obtener todos los horarios
 const obtenerHorarios = async (req, res) => {
     try {
@@ -44,6 +64,18 @@ const crearHorario = async (req, res) => {
         if (hora_apertura >= hora_cierre) {
             return res.status(400).json({
                 mensaje: 'La hora de cierre debe ser posterior a la apertura.',
+            });
+        }
+
+        const hayCruce = await existeCruceHorario(
+            dia,
+            hora_apertura,
+            hora_cierre
+        );
+
+        if (hayCruce) {
+            return res.status(409).json({
+                mensaje: 'El horario se cruza con otro horario existente para ese día.'
             });
         }
 
@@ -106,6 +138,19 @@ const actualizarHorario = async (req, res) => {
         if (hora_apertura >= hora_cierre) {
             return res.status(400).json({
                 mensaje: 'La hora de cierre debe ser posterior a la apertura.',
+            });
+        }
+
+        const hayCruce = await existeCruceHorario(
+            dia,
+            hora_apertura,
+            hora_cierre,
+            id
+        );
+
+        if (hayCruce) {
+            return res.status(409).json({
+                mensaje: 'El horario se cruza con otro horario existente para ese día.'
             });
         }
 
