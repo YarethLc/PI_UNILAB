@@ -90,7 +90,40 @@ CREATE TABLE codigos_verificacion (
         REFERENCES usuario(id_usuario)
 );
 
-SELECT * FROM usuario;
+
+CREATE TABLE asistencia (
+    id_asistencia SERIAL PRIMARY KEY,
+
+    id_usuario INTEGER NOT NULL,
+    id_laboratorio INTEGER NOT NULL,
+
+    fecha DATE NOT NULL DEFAULT CURRENT_DATE,
+    hora_entrada TIMESTAMP NOT NULL DEFAULT
+        (CURRENT_TIMESTAMP AT TIME ZONE 'America/Bogota'),
+
+    hora_salida TIMESTAMP NULL,
+
+    CONSTRAINT fk_asistencia_usuario
+        FOREIGN KEY (id_usuario)
+        REFERENCES usuario(id_usuario),
+
+    CONSTRAINT fk_asistencia_laboratorio
+        FOREIGN KEY (id_laboratorio)
+        REFERENCES laboratorio(id_laboratorio),
+
+    CONSTRAINT chk_hora_salida
+        CHECK (
+            hora_salida IS NULL
+            OR hora_salida >= hora_entrada
+        )
+);
+
+
+CREATE UNIQUE INDEX uq_asistencia_abierta
+ON asistencia (id_usuario)
+WHERE hora_salida IS NULL;
+
+SELECT * FROM laboratorio;
 
 
 
