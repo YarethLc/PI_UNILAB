@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../widgets/custom_text_field.dart';
+import '../../services/api_service.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
-  const ResetPasswordScreen({super.key});
+  final String tokenRecuperacion;
+
+  const ResetPasswordScreen({
+    super.key,
+    required this.tokenRecuperacion,
+  });
 
   @override
   State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
@@ -13,19 +19,63 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+
   bool _obscure1 = true;
   bool _obscure2 = true;
+  bool _isSubmitting = false;
 
-  void _savePassword() {
-    if (_formKey.currentState!.validate()) {
+  Future<void> _savePassword() async {
+    if (_isSubmitting) return;
+
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    final resultado = await ApiService.restablecerContrasena(
+      tokenRecuperacion: widget.tokenRecuperacion,
+      nuevaContrasena: _passwordController.text,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _isSubmitting = false;
+    });
+
+    if (resultado['success'] == true) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('¡Contraseña actualizada exitosamente! Inicia sesión con tu nueva clave.'),
+        SnackBar(
+          content: Text(
+            resultado['mensaje'] ?? 'Contraseña actualizada correctamente.',
+          ),
           backgroundColor: AppColors.accentGreen,
         ),
       );
-      Navigator.pushReplacementNamed(context, '/login');
+
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/login',
+        (route) => false,
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            resultado['error'] ?? 'No se pudo actualizar la contraseña.',
+          ),
+          backgroundColor: AppColors.error,
+        ),
+      );
     }
+  }
+
+  @override
+  void dispose() {
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -41,7 +91,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.surfaceBorder, width: 1),
+              border: Border.all(
+                color: AppColors.surfaceBorder,
+                width: 1,
+              ),
             ),
             child: Form(
               key: _formKey,
@@ -61,7 +114,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   const Text(
                     'Crea una contraseña segura de al menos 8 caracteres para tu cuenta LabAcces.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 13, color: AppColors.textMuted),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textMuted,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   CustomTextField(
@@ -70,10 +126,22 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     obscureText: _obscure1,
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
-                      icon: Icon(_obscure1 ? Icons.visibility_off : Icons.visibility, size: 20),
-                      onPressed: () => setState(() => _obscure1 = !_obscure1),
+                      icon: Icon(
+                        _obscure1 ? Icons.visibility_off : Icons.visibility,
+                        size: 20,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscure1 = !_obscure1;
+                        });
+                      },
                     ),
-                    validator: (v) => (v == null || v.length < 8) ? 'La contraseña debe tener al menos 8 caracteres.' : null,
+                    validator: (v) {
+                      if (v == null || v.length < 8) {
+                        return 'La contraseña debe tener al menos 8 caracteres.';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 16),
                   CustomTextField(
@@ -82,18 +150,40 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     obscureText: _obscure2,
                     prefixIcon: const Icon(Icons.lock_reset),
                     suffixIcon: IconButton(
-                      icon: Icon(_obscure2 ? Icons.visibility_off : Icons.visibility, size: 20),
-                      onPressed: () => setState(() => _obscure2 = !_obscure2),
+                      icon: Icon(
+                        _obscure2 ? Icons.visibility_off : Icons.visibility,
+                        size: 20,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscure2 = !_obscure2;
+                        });
+                      },
                     ),
                     validator: (v) {
-                      if (v != _passwordController.text) return 'Las contraseñas no coinciden.';
+                      if (v == null || v.isEmpty) {
+                        return 'Confirma tu nueva contraseña.';
+                      }
+
+                      if (v != _passwordController.text) {
+                        return 'Las contraseñas no coinciden.';
+                      }
+
                       return null;
                     },
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton(
-                    onPressed: _savePassword,
-                    child: const Text('Guardar y acceder'),
+                    onPressed: _isSubmitting ? null : _savePassword,
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text('Guardar y acceder'),
                   ),
                 ],
               ),

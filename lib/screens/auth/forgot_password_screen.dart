@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../widgets/custom_text_field.dart';
+import '../../services/api_service.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -12,13 +13,55 @@ class ForgotPasswordScreen extends StatefulWidget {
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
+  bool _isSubmitting = false;
 
-  void _sendCode() {
-    if (_formKey.currentState!.validate()) {
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _sendCode() async {
+    if (!_formKey.currentState!.validate() || _isSubmitting) {
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    final email = _emailController.text.trim();
+
+    final resultado = await ApiService.solicitarCodigoRecuperacion(email);
+
+    if (!mounted) return;
+
+    setState(() {
+      _isSubmitting = false;
+    });
+
+    if (resultado['success'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            resultado['mensaje'] ?? 'Solicitud procesada.',
+          ),
+        ),
+      );
+
       Navigator.pushNamed(
         context,
         '/verify-otp',
-        arguments: _emailController.text.trim(),
+        arguments: email,
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            resultado['error'] ?? 'No se pudo enviar el código.',
+          ),
+          backgroundColor: AppColors.error,
+        ),
       );
     }
   }
@@ -73,14 +116,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     keyboardType: TextInputType.emailAddress,
                     prefixIcon: const Icon(Icons.email_outlined),
                     validator: (v) {
-                      if (v == null || !v.contains('@')) return 'Escribe un correo electrónico válido.';
+                      if (v == null || !v.contains('@'))
+                        return 'Escribe un correo electrónico válido.';
                       return null;
                     },
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton(
-                    onPressed: _sendCode,
-                    child: const Text('Enviar código de recuperación'),
+                    onPressed: _isSubmitting ? null : _sendCode,
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text('Enviar código de recuperación'),
                   ),
                 ],
               ),

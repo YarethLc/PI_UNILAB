@@ -353,7 +353,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                     DataColumn(label: Text('Solicitante')),
                                     DataColumn(label: Text('Motivo')),
                                     DataColumn(label: Text('Estado')),
-                                    DataColumn(label: Text('Acciones')),
                                   ],
                                   rows: pendingReservations.map((r) {
                                     return DataRow(
@@ -368,30 +367,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                         DataCell(
                                             Text(r.purpose ?? 'Académico')),
                                         DataCell(StatusBadge(status: r.status)),
-                                        DataCell(
-                                          Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              IconButton(
-                                                icon: const Icon(
-                                                    Icons.check_circle_outline,
-                                                    color:
-                                                        AppColors.accentGreen),
-                                                tooltip: 'Aprobar reserva',
-                                                onPressed: () => _updateStatus(
-                                                    r.id, 'CONFIRMADA'),
-                                              ),
-                                              IconButton(
-                                                icon: const Icon(
-                                                    Icons.cancel_outlined,
-                                                    color: AppColors.error),
-                                                tooltip: 'Rechazar reserva',
-                                                onPressed: () => _updateStatus(
-                                                    r.id, 'CANCELADA'),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
                                       ],
                                     );
                                   }).toList(),

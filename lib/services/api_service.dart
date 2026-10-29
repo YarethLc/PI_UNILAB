@@ -719,4 +719,127 @@ class ApiService {
 
     return data.map((item) => Map<String, dynamic>.from(item as Map)).toList();
   }
+
+  // ==========================================
+  // RECUPERACIÓN DE CONTRASEÑA
+  // ==========================================
+
+  static Future<Map<String, dynamic>> solicitarCodigoRecuperacion(
+    String email,
+  ) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/auth/recuperar-password'),
+            headers: _headers(needsAuth: false),
+            body: jsonEncode({
+              'email': email.trim().toLowerCase(),
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
+
+      final dynamic data = jsonDecode(utf8.decode(response.bodyBytes));
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'mensaje': data is Map
+              ? data['mensaje'] ?? 'Solicitud procesada.'
+              : 'Solicitud procesada.',
+        };
+      }
+
+      return {
+        'success': false,
+        'error': _extractErrorMessage(response),
+      };
+    } catch (e) {
+      debugPrint('Error solicitando recuperación: $e');
+      return {
+        'success': false,
+        'error': 'No se pudo conectar con el servidor.',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> verificarCodigoRecuperacion({
+    required String email,
+    required String codigo,
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/auth/verificar-codigo'),
+            headers: _headers(needsAuth: false),
+            body: jsonEncode({
+              'email': email.trim().toLowerCase(),
+              'codigo': codigo.trim(),
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
+
+      final dynamic data = jsonDecode(utf8.decode(response.bodyBytes));
+
+      if (response.statusCode == 200 &&
+          data is Map &&
+          data['token_recuperacion'] != null) {
+        return {
+          'success': true,
+          'mensaje': data['mensaje'] ?? 'Código verificado correctamente.',
+          'token_recuperacion': data['token_recuperacion'].toString(),
+        };
+      }
+
+      return {
+        'success': false,
+        'error': _extractErrorMessage(response),
+      };
+    } catch (e) {
+      debugPrint('Error verificando código: $e');
+      return {
+        'success': false,
+        'error': 'No se pudo conectar con el servidor.',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> restablecerContrasena({
+    required String tokenRecuperacion,
+    required String nuevaContrasena,
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/auth/nueva-password'),
+            headers: _headers(needsAuth: false),
+            body: jsonEncode({
+              'token_recuperacion': tokenRecuperacion,
+              'nuevaContrasena': nuevaContrasena,
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
+
+      final dynamic data = jsonDecode(utf8.decode(response.bodyBytes));
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'mensaje': data is Map
+              ? data['mensaje'] ?? 'Contraseña actualizada correctamente.'
+              : 'Contraseña actualizada correctamente.',
+        };
+      }
+
+      return {
+        'success': false,
+        'error': _extractErrorMessage(response),
+      };
+    } catch (e) {
+      debugPrint('Error restableciendo contraseña: $e');
+      return {
+        'success': false,
+        'error': 'No se pudo conectar con el servidor.',
+      };
+    }
+  }
 }
