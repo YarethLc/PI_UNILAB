@@ -1,4 +1,4 @@
-# UniLab – SAICI
+# LabAcces 
 
 Sistema de reserva de espacios (laboratorios y biblioteca) de la UCEVA para egresados y estudiantes de Ingeniería de Sistemas.
 
