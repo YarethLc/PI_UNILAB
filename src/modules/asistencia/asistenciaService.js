@@ -24,7 +24,7 @@ const registrarEntrada = async (idUsuario, idLaboratorio) => {
 const registrarSalida = async (idUsuario) => {
     const consulta = `
         UPDATE asistencia
-        SET hora_salida = CURRENT_TIMESTAMP
+        SET hora_salida = TIMEZONE('America/Bogota', CURRENT_TIMESTAMP)
         WHERE id_usuario = $1
             AND hora_salida IS NULL
         RETURNING
