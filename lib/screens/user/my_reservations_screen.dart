@@ -24,12 +24,7 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
 
   bool get _esAdministrador => _authSession.currentRole == 'ADMINISTRADOR';
 
-  final List<String> filters = [
-    'Todas',
-    'Confirmada',
-    'Pendiente',
-    'Cancelada'
-  ];
+  final List<String> filters = ['Todas', 'Confirmada', 'Cancelada'];
 
   @override
   void initState() {

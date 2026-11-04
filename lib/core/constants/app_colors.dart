@@ -41,8 +41,6 @@ class AppColors {
   // Estados
   static const Color statusConfirmadaBg = Color(0xFFE8F5E9);
   static const Color statusConfirmadaText = Color(0xFF246D38);
-  static const Color statusPendienteBg = Color(0xFFFFF3D5);
-  static const Color statusPendienteText = Color(0xFF8A5B06);
   static const Color statusCanceladaBg = Color(0xFFFFEBEE);
   static const Color statusCanceladaText = Color(0xFFC62828);
   static const Color statusFinalizadaBg = Color(0xFFECEFF1);

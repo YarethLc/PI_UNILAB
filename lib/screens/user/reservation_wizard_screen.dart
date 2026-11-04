@@ -4,6 +4,7 @@ import '../../models/space_model.dart';
 import '../../services/api_service.dart';
 import '../../services/auth_session_service.dart';
 import '../../widgets/app_layout.dart';
+import '../../models/schedule_model.dart';
 
 class ReservationWizardScreen extends StatefulWidget {
   final SpaceModel? initialSpace;
@@ -22,17 +23,13 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
   bool _isSubmitting = false;
 
   SpaceModel? _selectedSpace;
-  DateTime _selectedDate = DateTime.now().add(const Duration(days: 1));
-  String _selectedSlot = '08:00 – 10:00';
-  String _selectedPurpose = 'Actividad académica';
+  DateTime _selectedDate = DateTime.now();
+  String _selectedSlot = '';
 
-  final List<String> timeSlots = [
-    '08:00 – 10:00',
-    '10:00 – 12:00',
-    '14:00 – 16:00',
-    '16:00 – 18:00',
-    '18:00 – 20:00',
-  ];
+  List<ScheduleModel> _schedules = [];
+  bool _isLoadingSchedules = true;
+  String? _scheduleError;
+  String _selectedPurpose = 'Actividad académica';
 
   final List<String> purposes = [
     'Actividad académica',
@@ -45,28 +42,137 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedSpace = widget.initialSpace;
     _loadSpaces();
+    _loadSchedules();
   }
 
   Future<void> _loadSpaces() async {
-    final list = await ApiService.fetchLaboratorios();
-    if (!mounted) return;
-    setState(() {
-      _spaces = list;
-      _isLoadingSpaces = false;
-      if (widget.initialSpace != null) {
-        _selectedSpace = list.firstWhere(
-          (s) => s.id == widget.initialSpace!.id,
-          orElse: () => list.isNotEmpty ? list.first : widget.initialSpace!,
-        );
-      } else if (list.isNotEmpty) {
-        _selectedSpace = list.first;
+    try {
+      final spaces = await ApiService.fetchLaboratorios();
+      if (!mounted) return;
+
+      setState(() {
+        _spaces = spaces;
+        _isLoadingSpaces = false;
+        if (_selectedSpace == null && spaces.isNotEmpty) {
+          _selectedSpace = spaces.first;
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoadingSpaces = false);
+    }
+  }
+
+  bool _isAvailableDay(DateTime date) {
+    return _schedules.any((schedule) =>
+        schedule.weekday == date.weekday &&
+        _getSlotsForSchedule(schedule).isNotEmpty);
+  }
+
+  DateTime? get _firstAvailableDate {
+    final today = DateTime.now();
+
+    for (int i = 0; i <= 60; i++) {
+      final date =
+          DateTime(today.year, today.month, today.day).add(Duration(days: i));
+
+      if (_isAvailableDay(date)) {
+        return date;
       }
-    });
+    }
+
+    return null;
+  }
+
+  int? _timeToMinutes(String value) {
+    final parts = value.split(':');
+    if (parts.length < 2) return null;
+
+    final hour = int.tryParse(parts[0]);
+    final minute = int.tryParse(parts[1]);
+    if (hour == null ||
+        minute == null ||
+        hour < 0 ||
+        hour > 23 ||
+        minute < 0 ||
+        minute > 59) {
+      return null;
+    }
+    return hour * 60 + minute;
+  }
+
+  String _formatMinutes(int minutes) {
+    final hours = (minutes ~/ 60).toString().padLeft(2, '0');
+    final mins = (minutes % 60).toString().padLeft(2, '0');
+    return '$hours:$mins';
+  }
+
+  List<String> _getSlotsForSchedule(ScheduleModel schedule) {
+    final openingMinutes = _timeToMinutes(schedule.opensAt);
+    final closingMinutes = _timeToMinutes(schedule.closesAt);
+
+    if (openingMinutes == null ||
+        closingMinutes == null ||
+        closingMinutes <= openingMinutes) {
+      return [];
+    }
+
+    final slots = <String>[];
+    for (int start = openingMinutes;
+        start + 120 <= closingMinutes;
+        start += 120) {
+      slots.add('${_formatMinutes(start)} – ${_formatMinutes(start + 120)}');
+    }
+    return slots;
+  }
+
+  List<String> _getAvailableTimeSlots() {
+    final slots = <String>{};
+    final daySchedules = _schedules.where(
+      (schedule) => schedule.weekday == _selectedDate.weekday,
+    );
+
+    for (final schedule in daySchedules) {
+      slots.addAll(_getSlotsForSchedule(schedule));
+    }
+
+    final result = slots.toList();
+    result.sort((a, b) => a.compareTo(b));
+    return result;
+  }
+
+  Future<void> _loadSchedules() async {
+    try {
+      final schedules = await ApiService.fetchSchedules();
+      if (!mounted) return;
+
+      setState(() {
+        _schedules = schedules;
+        _isLoadingSchedules = false;
+        _scheduleError = null;
+
+        final firstDate = _firstAvailableDate;
+        if (firstDate != null) {
+          _selectedDate = firstDate;
+          final slots = _getAvailableTimeSlots();
+          _selectedSlot = slots.isNotEmpty ? slots.first : '';
+        } else {
+          _selectedSlot = '';
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoadingSchedules = false;
+        _scheduleError = 'No se pudieron cargar los horarios institucionales.';
+      });
+    }
   }
 
   Future<void> _finishReservation() async {
-    if (_selectedSpace == null) return;
+    if (_selectedSpace == null || !_selectedSlot.contains(' – ')) return;
 
     final times = _selectedSlot.split(' – ');
     final dateStr =
@@ -97,7 +203,7 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
             children: [
               Icon(Icons.check_circle, color: AppColors.accentGreen, size: 28),
               SizedBox(width: 10),
-              Text('¡Reserva Guardada en BD!',
+              Text('¡Reserva Guardada!',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ],
           ),
@@ -280,7 +386,11 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
                         else
                           const SizedBox.shrink(),
                         ElevatedButton(
-                          onPressed: _isSubmitting
+                          onPressed: _isSubmitting ||
+                                  (_currentStep == 1 &&
+                                      (_isLoadingSchedules ||
+                                          _firstAvailableDate == null)) ||
+                                  (_currentStep == 2 && _selectedSlot.isEmpty)
                               ? null
                               : () {
                                   if (_currentStep < 3) {
@@ -289,8 +399,31 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
                                         const SnackBar(
-                                            content: Text(
-                                                'Por favor selecciona un espacio.')),
+                                          content: Text(
+                                              'Por favor selecciona un espacio.'),
+                                        ),
+                                      );
+                                      return;
+                                    }
+                                    if (_currentStep == 1 &&
+                                        !_isAvailableDay(_selectedDate)) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                              'Selecciona un día con horario registrado.'),
+                                        ),
+                                      );
+                                      return;
+                                    }
+                                    if (_currentStep == 2 &&
+                                        _selectedSlot.isEmpty) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                              'No hay franjas disponibles para la fecha seleccionada.'),
+                                        ),
                                       );
                                       return;
                                     }
@@ -310,7 +443,7 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
                                 )
                               : Text(_currentStep == 3
                                   ? 'Confirmar reserva'
-                                  : 'Siguiente paso'),
+                                  : 'Continuar'),
                         ),
                       ],
                     ),
@@ -390,7 +523,7 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 24),
         child: Text(
-          'No hay laboratorios disponibles en la base de datos para reservar.',
+          'No hay laboratorios disponibles para reservar.',
           style: TextStyle(color: AppColors.textMuted),
         ),
       );
@@ -421,40 +554,38 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
           ),
         ),
         const SizedBox(height: 20),
-        // Botón de avance visible justo después de elegir el espacio,
-        // para no depender del botón del final de la página.
-        Align(
-          alignment: Alignment.centerRight,
-          child: ElevatedButton.icon(
-            onPressed: _isSubmitting
-                ? null
-                : () {
-                    if (_selectedSpace == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Por favor selecciona un espacio.')),
-                      );
-                      return;
-                    }
-                    setState(() => _currentStep++);
-                  },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.accentGreen,
-              foregroundColor: Colors.white,
-              minimumSize: const Size(140, 44),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
-            ),
-            icon: const Icon(Icons.arrow_forward, size: 18),
-            label: const Text('Continuar'),
-          ),
-        ),
       ],
     );
   }
 
   // Paso 2
   Widget _buildDateStep() {
+    if (_isLoadingSchedules) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_scheduleError != null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(_scheduleError!, style: const TextStyle(color: AppColors.error)),
+          const SizedBox(height: 12),
+          OutlinedButton(
+              onPressed: _loadSchedules, child: const Text('Reintentar')),
+        ],
+      );
+    }
+
+    if (_firstAvailableDate == null) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 20),
+        child: Text(
+          'Actualmente no hay días con horarios institucionales configurados.',
+          style: TextStyle(color: AppColors.textMuted),
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -467,11 +598,13 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
             color: AppColors.frameBg,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Row(
+          child: Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               const Icon(Icons.calendar_month,
                   color: AppColors.accentGreen, size: 32),
-              const SizedBox(width: 16),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -481,22 +614,38 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
                   Text(
                     '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
                     style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textStrong),
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textStrong,
+                    ),
                   ),
                 ],
               ),
-              const Spacer(),
               ElevatedButton(
                 onPressed: () async {
+                  final today = DateTime.now();
+                  final firstDate =
+                      DateTime(today.year, today.month, today.day);
+                  final lastDate = firstDate.add(const Duration(days: 60));
+                  final currentIsValid = _isAvailableDay(_selectedDate);
+                  final initialDate =
+                      currentIsValid ? _selectedDate : _firstAvailableDate!;
+
                   final picked = await showDatePicker(
                     context: context,
-                    initialDate: _selectedDate,
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime.now().add(const Duration(days: 60)),
+                    initialDate: initialDate,
+                    firstDate: firstDate,
+                    lastDate: lastDate,
+                    selectableDayPredicate: _isAvailableDay,
                   );
-                  if (picked != null) setState(() => _selectedDate = picked);
+
+                  if (picked != null && mounted) {
+                    setState(() {
+                      _selectedDate = picked;
+                      final slots = _getAvailableTimeSlots();
+                      _selectedSlot = slots.isNotEmpty ? slots.first : '';
+                    });
+                  }
                 },
                 style:
                     ElevatedButton.styleFrom(minimumSize: const Size(140, 40)),
@@ -505,36 +654,53 @@ class _ReservationWizardScreenState extends State<ReservationWizardScreen> {
             ],
           ),
         ),
+        const SizedBox(height: 12),
+        const Text(
+          'Solo puedes seleccionar días en los que el administrador haya registrado un horario.',
+          style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+        ),
       ],
     );
   }
 
   // Paso 3
   Widget _buildSlotStep() {
+    final availableSlots = _getAvailableTimeSlots();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text('Selecciona la franja horaria:',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         const SizedBox(height: 12),
-        Wrap(
-          spacing: 12,
-          runSpacing: 10,
-          children: timeSlots.map((slot) {
-            final isSel = _selectedSlot == slot;
-            return ChoiceChip(
-              label: Text(slot),
-              selected: isSel,
-              selectedColor: AppColors.accentGreen,
-              backgroundColor: Colors.white,
-              labelStyle: TextStyle(
-                color: isSel ? Colors.white : AppColors.textStrong,
-                fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
-              ),
-              onSelected: (val) => setState(() => _selectedSlot = slot),
-            );
-          }).toList(),
-        ),
+        if (_isLoadingSchedules)
+          const Center(child: CircularProgressIndicator())
+        else if (availableSlots.isEmpty)
+          const Text(
+            'No hay franjas horarias disponibles para este día. Selecciona otra fecha.',
+            style: TextStyle(color: AppColors.textMuted),
+          )
+        else
+          Wrap(
+            spacing: 12,
+            runSpacing: 10,
+            children: availableSlots.map((slot) {
+              final isSel = _selectedSlot == slot;
+              return ChoiceChip(
+                label: Text(slot),
+                selected: isSel,
+                selectedColor: AppColors.accentGreen,
+                backgroundColor: Colors.white,
+                labelStyle: TextStyle(
+                  color: isSel ? Colors.white : AppColors.textStrong,
+                  fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
+                ),
+                onSelected: (val) {
+                  if (val) setState(() => _selectedSlot = slot);
+                },
+              );
+            }).toList(),
+          ),
         const SizedBox(height: 24),
         const Text('Motivo o justificación de la reserva:',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),

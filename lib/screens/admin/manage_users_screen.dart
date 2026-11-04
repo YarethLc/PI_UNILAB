@@ -43,7 +43,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
           : RefreshIndicator(
               onRefresh: _loadUsers,
               child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
+                physics: const ClampingScrollPhysics(),
                 padding: const EdgeInsets.all(24),
                 child: Container(
                   decoration: BoxDecoration(
@@ -61,10 +61,13 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                         spacing: 12,
                         runSpacing: 8,
                         children: [
-                          const Text('Usuarios Registrados en BD', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          const Text('Usuarios Registrados',
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold)),
                           Text(
                             '${_users.length} cuentas registradas',
-                            style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                            style: const TextStyle(
+                                color: AppColors.textMuted, fontSize: 13),
                           ),
                         ],
                       ),
@@ -73,13 +76,16 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 32),
                           child: Center(
-                            child: Text('No hay usuarios registrados en la base de datos.', style: TextStyle(color: AppColors.textMuted)),
+                            child: Text(
+                                'No hay usuarios registrados en la base de datos.',
+                                style: TextStyle(color: AppColors.textMuted)),
                           ),
                         )
                       else
                         HorizontalTableScroll(
                           child: DataTable(
-                            headingRowColor: WidgetStateProperty.all(AppColors.frameBg),
+                            headingRowColor:
+                                WidgetStateProperty.all(AppColors.frameBg),
                             columns: const [
                               DataColumn(label: Text('ID')),
                               DataColumn(label: Text('Nombre Completo')),
@@ -92,15 +98,19 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                               return DataRow(
                                 cells: [
                                   DataCell(Text('#${u.id}')),
-                                  DataCell(Text(u.fullName, style: const TextStyle(fontWeight: FontWeight.w600))),
+                                  DataCell(Text(u.fullName,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w600))),
                                   DataCell(Text(u.correo)),
                                   DataCell(Text(u.telefono)),
                                   DataCell(Text(u.tipo)),
                                   DataCell(
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 4),
                                       decoration: BoxDecoration(
-                                        color: u.rol.toUpperCase() == 'ADMINISTRADOR'
+                                        color: u.rol.toUpperCase() ==
+                                                'ADMINISTRADOR'
                                             ? AppColors.accentGreenSoft
                                             : AppColors.frameBg,
                                         borderRadius: BorderRadius.circular(6),
@@ -110,7 +120,8 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                                         style: TextStyle(
                                           fontSize: 11,
                                           fontWeight: FontWeight.bold,
-                                          color: u.rol.toUpperCase() == 'ADMINISTRADOR'
+                                          color: u.rol.toUpperCase() ==
+                                                  'ADMINISTRADOR'
                                               ? AppColors.accentGreenText
                                               : AppColors.textBody,
                                         ),

@@ -65,13 +65,13 @@ class _ManageReservationsScreenState extends State<ManageReservationsScreen> {
       currentRoute: '/admin/reservations',
       title: 'Gestionar Reservas',
       subtitle:
-          'Aprobación, rechazo y seguimiento de solicitudes universitarias en BD',
+          'Aprobación, rechazo y seguimiento de solicitudes universitarias',
       child: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _loadReservas,
               child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
+                physics: const ClampingScrollPhysics(),
                 padding: const EdgeInsets.all(24),
                 child: Container(
                   decoration: BoxDecoration(
@@ -89,17 +89,12 @@ class _ManageReservationsScreenState extends State<ManageReservationsScreen> {
                         spacing: 12,
                         runSpacing: 8,
                         children: [
-                          const Text('Listado de Reservas en Base de Datos',
+                          const Text('Listado de Reservas',
                               style: TextStyle(
                                   fontSize: 18, fontWeight: FontWeight.bold)),
                           DropdownButton<String>(
                             value: _selectedFilter,
-                            items: [
-                              'Todas',
-                              'Pendiente',
-                              'Confirmada',
-                              'Cancelada'
-                            ]
+                            items: ['Todas', 'Confirmada', 'Cancelada']
                                 .map((s) =>
                                     DropdownMenuItem(value: s, child: Text(s)))
                                 .toList(),

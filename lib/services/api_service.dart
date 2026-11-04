@@ -10,15 +10,7 @@ import 'auth_session_service.dart';
 class ApiService {
   // En Web o Desktop se usa localhost:3000.
   // En el Emulador de Android, localhost es el emulador mismo; la IP del host de la PC es 10.0.2.2.
-  static String get baseUrl {
-    if (kIsWeb) {
-      return 'http://localhost:3000/api';
-    }
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:3000/api';
-    }
-    return 'http://localhost:3000/api';
-  }
+  static const String baseUrl = 'https://backend-pis6.onrender.com/api';
 
   static Map<String, String> _headers({bool needsAuth = true}) {
     final headers = <String, String>{
@@ -410,7 +402,7 @@ class ApiService {
                     ? 'Disponible'
                     : 'Ocupado',
             status: item['estado'] ?? 'Disponible',
-            schedule: 'Lunes a viernes, 8:00 a. m. – 6:00 p. m.',
+            schedule: 'Lunes a viernes, 8:00 a. m. – 9:00 p. m.',
             icon: '💻',
           );
         }).toList();

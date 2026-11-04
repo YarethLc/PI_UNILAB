@@ -76,13 +76,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
     const statusLabels = <String, String>{
       'confirmada': 'Confirmadas',
-      'pendiente': 'Pendientes',
       'cancelada': 'Canceladas',
       'finalizada': 'Finalizadas',
     };
     const statusColors = <String, Color>{
       'confirmada': AppColors.accentGreen,
-      'pendiente': Color(0xFFE0A100),
       'cancelada': AppColors.error,
       'finalizada': Color(0xFF3E6FB0),
     };
@@ -218,7 +216,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
                             final pieCard = _buildChartCard(
                               title: 'Reservas por estado',
-                              subtitle: 'Distribución de las solicitudes registradas',
+                              subtitle:
+                                  'Distribución de las solicitudes registradas',
                               child: Wrap(
                                 alignment: WrapAlignment.center,
                                 crossAxisAlignment: WrapCrossAlignment.center,
@@ -259,7 +258,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
                                                   ),
                                                 ),
                                                 Text(
-                                                  entry.value.toStringAsFixed(0),
+                                                  entry.value
+                                                      .toStringAsFixed(0),
                                                   style: const TextStyle(
                                                     fontSize: 12.5,
                                                     fontWeight: FontWeight.w700,

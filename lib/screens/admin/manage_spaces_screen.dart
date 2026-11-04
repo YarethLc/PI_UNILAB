@@ -141,7 +141,7 @@ class _ManageSpacesScreenState extends State<ManageSpacesScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                         content: Text(existing == null
-                            ? 'Laboratorio creado en BD con éxito'
+                            ? 'Laboratorio creado con éxito'
                             : 'Laboratorio actualizado')),
                   );
                   _loadSpaces();
@@ -212,7 +212,7 @@ class _ManageSpacesScreenState extends State<ManageSpacesScreen> {
     return AppLayout(
       currentRoute: '/admin/spaces',
       title: 'Gestionar Espacios Universitarios',
-      subtitle: 'Configuración y catálogo de laboratorios en base de datos',
+      subtitle: 'Configuración y catálogo de laboratorios',
       child: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -236,7 +236,7 @@ class _ManageSpacesScreenState extends State<ManageSpacesScreen> {
                         spacing: 12,
                         runSpacing: 12,
                         children: [
-                          const Text('Catálogo de Laboratorios en BD',
+                          const Text('Laboratorios',
                               style: TextStyle(
                                   fontSize: 18, fontWeight: FontWeight.bold)),
                           ElevatedButton.icon(

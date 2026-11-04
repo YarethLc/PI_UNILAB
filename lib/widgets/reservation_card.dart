@@ -17,7 +17,7 @@ class ReservationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final canCancel = reservation.status == 'Confirmada' || reservation.status == 'Pendiente';
+    final canCancel = reservation.status == 'CONFIRMADA';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -55,22 +55,26 @@ class ReservationCard extends StatelessWidget {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.calendar_today, size: 14, color: AppColors.textMuted),
+                  const Icon(Icons.calendar_today,
+                      size: 14, color: AppColors.textMuted),
                   const SizedBox(width: 6),
                   Text(
                     reservation.date,
-                    style: const TextStyle(fontSize: 13, color: AppColors.textBody),
+                    style: const TextStyle(
+                        fontSize: 13, color: AppColors.textBody),
                   ),
                 ],
               ),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.access_time, size: 14, color: AppColors.textMuted),
+                  const Icon(Icons.access_time,
+                      size: 14, color: AppColors.textMuted),
                   const SizedBox(width: 6),
                   Text(
                     '${reservation.startTime} – ${reservation.endTime}',
-                    style: const TextStyle(fontSize: 13, color: AppColors.textBody),
+                    style: const TextStyle(
+                        fontSize: 13, color: AppColors.textBody),
                   ),
                 ],
               ),
@@ -80,7 +84,10 @@ class ReservationCard extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               'Motivo: ${reservation.purpose}',
-              style: const TextStyle(fontSize: 12, color: AppColors.textSoft, fontStyle: FontStyle.italic),
+              style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSoft,
+                  fontStyle: FontStyle.italic),
             ),
           ],
           const SizedBox(height: 12),
@@ -101,13 +108,24 @@ class ReservationCard extends StatelessWidget {
                   child: const Text('Detalles', style: TextStyle(fontSize: 12)),
                 ),
                 if (canCancel && onCancel != null)
-                  TextButton(
+                  OutlinedButton(
                     onPressed: onCancel,
-                    style: TextButton.styleFrom(
+                    style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.error,
-                      minimumSize: const Size(80, 32),
+                      side: BorderSide(
+                        color: AppColors.error,
+                        width: 1.5,
+                      ),
+                      minimumSize: const Size(90, 32),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
                     ),
-                    child: const Text('Cancelar', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      'Cancelar',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
               ],
             ),

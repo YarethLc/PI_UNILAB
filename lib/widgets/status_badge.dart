@@ -20,9 +20,6 @@ class StatusBadge extends StatelessWidget {
     if (s.contains('confirmada') || s == 'disponible' || s.contains('activo')) {
       bg = AppColors.statusConfirmadaBg;
       fg = AppColors.statusConfirmadaText;
-    } else if (s.contains('pendiente') || s.contains('ocupado')) {
-      bg = AppColors.statusPendienteBg;
-      fg = AppColors.statusPendienteText;
     } else if (s.contains('cancelada') || s.contains('inactivo')) {
       bg = AppColors.statusCanceladaBg;
       fg = AppColors.statusCanceladaText;

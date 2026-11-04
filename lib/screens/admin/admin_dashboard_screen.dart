@@ -68,9 +68,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final pendingReservations =
-        _reservas.where((r) => r.status.toUpperCase() == 'PENDIENTE').toList();
-
     return AppLayout(
       currentRoute: '/admin/dashboard',
       title: 'Panel Administrativo LabAcces',
@@ -102,11 +99,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                     Icons.calendar_today,
                                     AppColors.accentGreen),
                                 const SizedBox(height: 12),
-                                _buildKpiCard(
-                                    'Pendientes por Aprobar',
-                                    '${pendingReservations.length}',
-                                    Icons.pending_actions,
-                                    AppColors.amberText),
                                 const SizedBox(height: 12),
                                 _buildKpiCard(
                                     'Espacios Registrados',
@@ -135,12 +127,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                             Icons.calendar_today,
                                             AppColors.accentGreen)),
                                     const SizedBox(width: 14),
-                                    Expanded(
-                                        child: _buildKpiCard(
-                                            'Pendientes por Aprobar',
-                                            '${pendingReservations.length}',
-                                            Icons.pending_actions,
-                                            AppColors.amberText)),
                                   ],
                                 ),
                                 const SizedBox(height: 14),
@@ -174,12 +160,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                       Icons.calendar_today,
                                       AppColors.accentGreen)),
                               const SizedBox(width: 16),
-                              Expanded(
-                                  child: _buildKpiCard(
-                                      'Pendientes por Aprobar',
-                                      '${pendingReservations.length}',
-                                      Icons.pending_actions,
-                                      AppColors.amberText)),
                               const SizedBox(width: 16),
                               Expanded(
                                   child: _buildKpiCard(
@@ -296,85 +276,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         ),
                       ),
                       const SizedBox(height: 28),
-
-                      // Solicitudes Pendientes
-                      Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppColors.surfaceBorder),
-                        ),
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Wrap(
-                              alignment: WrapAlignment.spaceBetween,
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              spacing: 12,
-                              runSpacing: 8,
-                              children: [
-                                const Text(
-                                  'Solicitudes Pendientes en BD',
-                                  style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.textStrong),
-                                ),
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.pushReplacementNamed(
-                                          context, '/admin/reservations'),
-                                  child: const Text('Ver todas las reservas',
-                                      style: TextStyle(
-                                          color: AppColors.accentGreenText)),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            if (pendingReservations.isEmpty)
-                              const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 20),
-                                child: Text(
-                                    'No hay solicitudes pendientes en este momento.',
-                                    style:
-                                        TextStyle(color: AppColors.textMuted)),
-                              )
-                            else
-                              HorizontalTableScroll(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: DataTable(
-                                  headingRowColor: WidgetStateProperty.all(
-                                      AppColors.frameBg),
-                                  columns: const [
-                                    DataColumn(label: Text('Espacio')),
-                                    DataColumn(label: Text('Fecha y Hora')),
-                                    DataColumn(label: Text('Solicitante')),
-                                    DataColumn(label: Text('Motivo')),
-                                    DataColumn(label: Text('Estado')),
-                                  ],
-                                  rows: pendingReservations.map((r) {
-                                    return DataRow(
-                                      cells: [
-                                        DataCell(Text(r.spaceName,
-                                            style: const TextStyle(
-                                                fontWeight: FontWeight.w600))),
-                                        DataCell(Text(
-                                            '${r.date} (${r.startTime} – ${r.endTime})')),
-                                        DataCell(
-                                            Text(r.userName ?? 'Estudiante')),
-                                        DataCell(
-                                            Text(r.purpose ?? 'Académico')),
-                                        DataCell(StatusBadge(status: r.status)),
-                                      ],
-                                    );
-                                  }).toList(),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
                     ],
                   ),
                 ),

@@ -64,21 +64,48 @@ class _LabDashboardScreenState extends State<LabDashboardScreen> {
                         if (isMobile) {
                           return Column(
                             children: [
-                              _buildKpiCard('Laboratorios Registrados', '${_labSpaces.length}', Icons.science_outlined, AppColors.primaryGreen),
+                              _buildKpiCard(
+                                  'Laboratorios Registrados',
+                                  '${_labSpaces.length}',
+                                  Icons.science_outlined,
+                                  AppColors.primaryGreen),
                               const SizedBox(height: 12),
-                              _buildKpiCard('Reservas Programadas', '${_labReservations.length}', Icons.biotech_outlined, AppColors.accentGreen),
+                              _buildKpiCard(
+                                  'Reservas Programadas',
+                                  '${_labReservations.length}',
+                                  Icons.biotech_outlined,
+                                  AppColors.accentGreen),
                               const SizedBox(height: 12),
-                              _buildKpiCard('Capacidad Total', '${_labSpaces.fold(0, (sum, s) => sum + s.capacity)} personas', Icons.people_outline, AppColors.amberText),
+                              _buildKpiCard(
+                                  'Capacidad Total',
+                                  '${_labSpaces.fold(0, (sum, s) => sum + s.capacity)} personas',
+                                  Icons.people_outline,
+                                  AppColors.amberText),
                             ],
                           );
                         }
                         return Row(
                           children: [
-                            Expanded(child: _buildKpiCard('Laboratorios Registrados', '${_labSpaces.length}', Icons.science_outlined, AppColors.primaryGreen)),
+                            Expanded(
+                                child: _buildKpiCard(
+                                    'Laboratorios Registrados',
+                                    '${_labSpaces.length}',
+                                    Icons.science_outlined,
+                                    AppColors.primaryGreen)),
                             const SizedBox(width: 16),
-                            Expanded(child: _buildKpiCard('Reservas Programadas', '${_labReservations.length}', Icons.biotech_outlined, AppColors.accentGreen)),
+                            Expanded(
+                                child: _buildKpiCard(
+                                    'Reservas Programadas',
+                                    '${_labReservations.length}',
+                                    Icons.biotech_outlined,
+                                    AppColors.accentGreen)),
                             const SizedBox(width: 16),
-                            Expanded(child: _buildKpiCard('Capacidad Total', '${_labSpaces.fold(0, (sum, s) => sum + s.capacity)} personas', Icons.people_outline, AppColors.amberText)),
+                            Expanded(
+                                child: _buildKpiCard(
+                                    'Capacidad Total',
+                                    '${_labSpaces.fold(0, (sum, s) => sum + s.capacity)} personas',
+                                    Icons.people_outline,
+                                    AppColors.amberText)),
                           ],
                         );
                       },
@@ -96,12 +123,16 @@ class _LabDashboardScreenState extends State<LabDashboardScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Estado de Laboratorios UCEVA en Base de Datos', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          const Text('Estado de Laboratorios',
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 16),
                           if (_labSpaces.isEmpty)
                             const Padding(
                               padding: EdgeInsets.symmetric(vertical: 24),
-                              child: Text('No hay laboratorios registrados por ahora.', style: TextStyle(color: AppColors.textMuted)),
+                              child: Text(
+                                  'No hay laboratorios registrados por ahora.',
+                                  style: TextStyle(color: AppColors.textMuted)),
                             )
                           else
                             for (final lab in _labSpaces)
@@ -113,28 +144,40 @@ class _LabDashboardScreenState extends State<LabDashboardScreen> {
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Expanded(
                                       child: Row(
                                         children: [
-                                          Text(lab.icon, style: const TextStyle(fontSize: 24)),
+                                          Text(lab.icon,
+                                              style: const TextStyle(
+                                                  fontSize: 24)),
                                           const SizedBox(width: 12),
                                           Expanded(
                                             child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
                                                 Text(
                                                   lab.name,
-                                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                                  style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 15),
                                                   maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
                                                 Text(
                                                   '${lab.location} · Capacidad: ${lab.capacity} personas',
-                                                  style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                                                  style: const TextStyle(
+                                                      fontSize: 12,
+                                                      color:
+                                                          AppColors.textMuted),
                                                   maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
                                               ],
                                             ),
@@ -175,7 +218,10 @@ class _LabDashboardScreenState extends State<LabDashboardScreen> {
               Expanded(
                 child: Text(
                   val,
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textStrong),
+                  style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textStrong),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
